@@ -4,6 +4,10 @@ import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
 import { Nationality } from "@/types/security";
 import DeleteButton from "@/components/DeleteButton";
+import PageHeader from "@/components/ui/PageHeader";
+import EmptyState from "@/components/ui/EmptyState";
+import NationalitiesFilters from "@/components/security/NationalitiesFilters";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,24 +38,13 @@ export default async function NationalitiesPage({ searchParams }: { searchParams
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="text-right flex items-center gap-2">
-                    <div>
-                        <div className="flex items-center gap-2 text-gray-500 text-xs mb-2">
-                            <span className="text-primary font-bold">الجنسيات</span>
-                            <span>&lt;</span>
-                            <span>الأساسية</span>
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-1">إدارة الجنسيات</h2>
-                        <p className="text-gray-500 text-sm">عرض وإدارة الجنسيات المعرفة داخل النظام للتعامل.</p>
-                    </div>
-                </div>
-                <Link href="/dashboard/security/nationalities/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-                    إضافة جنسية
-                    <Plus className="w-4 h-4 ml-2" />
-                </Link>
-            </div>
+            <PageHeader 
+                title="إدارة الجنسيات"
+                description="عرض وإدارة الجنسيات المعرفة داخل النظام للتعامل."
+                addLink="/dashboard/security/nationalities/add"
+                addLabel="إضافة جنسية"
+                breadcrumbs={[{ label: "الأساسية", href: "/dashboard" }, { label: "الجنسيات", active: true }]}
+            />
 
             {errorMessage && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -64,21 +57,9 @@ export default async function NationalitiesPage({ searchParams }: { searchParams
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
                 {/* Search */}
                 <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
-                    <form className="flex w-full md:w-auto gap-2" method="GET">
-                        <button type="submit" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0">
-                            بحث
-                        </button>
-                        <div className="relative flex-1 md:w-80">
-                            <input
-                                type="text"
-                                name="search"
-                                defaultValue={search}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right"
-                                placeholder="بحث باسم الجنسية أو المرجع"
-                                dir="rtl"
-                            />
-                        </div>
-                    </form>
+                    <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+                        <NationalitiesFilters />
+                    </Suspense>
                     <div className="text-xs font-bold text-gray-600">
                         إجمالي النتائج: {totalNationalities} جنسية
                     </div>
@@ -127,11 +108,7 @@ export default async function NationalitiesPage({ searchParams }: { searchParams
                                 </tr>
                             ))}
                             {nationalities.length === 0 && !errorMessage && (
-                                <tr>
-                                    <td colSpan={5} className="py-8 text-center text-gray-500">
-                                        لا توجد جنسيات לעرضها
-                                    </td>
-                                </tr>
+                                <EmptyState message="لا توجد جنسيات לעرضها" colSpan={5} />
                             )}
                         </tbody>
                     </table>

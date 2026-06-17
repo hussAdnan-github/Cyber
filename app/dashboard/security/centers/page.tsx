@@ -5,6 +5,11 @@ import { ApiResponse } from "@/types/api";
 import { Place, Center } from "@/types/security";
 import { User } from "@/types/user";
 import DeleteButton from "@/components/DeleteButton";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import CentersFilters from "@/components/security/CentersFilters";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -53,17 +58,13 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="text-right">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-1">إدارة المراكز الأمنية</h2>
-                    <p className="text-gray-500 text-sm">عرض وإدارة كافة المراكز المسجلة في النظام وتوزيعها الجغرافي.</p>
-                </div>
-                <Link href="/dashboard/security/centers/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-                    إضافة مركز جديد
-                    <Plus className="w-4 h-4 ml-2" />
-                </Link>
-            </div>
+            <PageHeader 
+                title="إدارة المراكز الأمنية"
+                description="عرض وإدارة كافة المراكز المسجلة في النظام وتوزيعها الجغرافي."
+                addLink="/dashboard/security/centers/add"
+                addLabel="إضافة مركز جديد"
+                breadcrumbs={[{ label: "الأمان", href: "/dashboard/security" }, { label: "المراكز الأمنية", active: true }]}
+            />
 
             {errorMessage && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -72,108 +73,43 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
                 </div>
             )}
 
-            {/* Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-start">
-                    <div className="text-right w-full">
-                        <div className="flex justify-between items-start w-full mb-4">
-                            <span className="text-success text-xs font-bold bg-green-50 px-2 py-0.5 rounded border border-green-100">+12%</span>
-                            <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
-                                <Building className="w-4 h-4 text-blue-500" />
-                            </div>
-                        </div>
-                        <h3 className="text-gray-500 text-xs mb-1">إجمالي المراكز</h3>
-                        <span className="text-2xl font-bold text-gray-900">{totalCenters}</span>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-start">
-                    <div className="text-right w-full">
-                        <div className="flex justify-end items-start w-full mb-4">
-                            <div className="w-8 h-8 rounded-md bg-green-50 flex items-center justify-center">
-                                <CheckCircle2 className="w-4 h-4 text-success" />
-                            </div>
-                        </div>
-                        <h3 className="text-gray-500 text-xs mb-1">مراكز نشطة</h3>
-                        <span className="text-2xl font-bold text-gray-900">{totalCenters}</span>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-start">
-                    <div className="text-right w-full">
-                        <div className="flex justify-end items-start w-full mb-4">
-                            <div className="w-8 h-8 rounded-md bg-orange-50 flex items-center justify-center">
-                                <MapPin className="w-4 h-4 text-orange-500" />
-                            </div>
-                        </div>
-                        <h3 className="text-gray-500 text-xs mb-1">المناطق المغطاة</h3>
-                        <span className="text-2xl font-bold text-gray-900">—</span>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-start border-l-4 border-l-danger">
-                    <div className="text-right w-full">
-                        <div className="flex justify-end items-start w-full mb-4">
-                            <div className="w-8 h-8 rounded-md bg-red-50 flex items-center justify-center">
-                                <TriangleAlert className="w-4 h-4 text-danger" />
-                            </div>
-                        </div>
-                        <h3 className="text-gray-500 text-xs mb-1">تنبيهات أمنية</h3>
-                        <span className="text-2xl font-bold text-gray-900">0</span>
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard 
+                    title="إجمالي المراكز"
+                    value={totalCenters}
+                    icon={<Building className="w-4 h-4 text-blue-500" />}
+                    trend={{ value: "+12%", isPositive: true }}
+                />
+                <StatCard 
+                    title="مراكز نشطة"
+                    value={totalCenters}
+                    icon={<CheckCircle2 className="w-4 h-4 text-success" />}
+                    iconBgClassName="bg-green-50"
+                    iconTextClassName="text-success"
+                />
+                <StatCard 
+                    title="المناطق المغطاة"
+                    value="—"
+                    icon={<MapPin className="w-4 h-4 text-orange-500" />}
+                    iconBgClassName="bg-orange-50"
+                    iconTextClassName="text-orange-500"
+                />
+                <StatCard 
+                    title="تنبيهات أمنية"
+                    value="0"
+                    icon={<TriangleAlert className="w-4 h-4 text-danger" />}
+                    iconBgClassName="bg-red-50"
+                    iconTextClassName="text-danger"
+                    borderColorClassName="border-l-danger"
+                />
             </div>
 
             {/* Table Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
                 <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-                    <form className="flex w-full md:w-auto gap-2" method="GET">
-                        <Link href="/dashboard/security/centers" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0 flex items-center justify-center">
-                            إعادة ضبط
-                        </Link>
-                        <button type="submit" className="bg-[#0f172a] hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0">
-                            تطبيق الفلاتر
-                        </button>
-                        <div className="relative flex-1 md:w-32">
-                            <select
-                                name="place"
-                                defaultValue={place}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right bg-white"
-                                dir="rtl"
-                            >
-                                <option value="">كل الأماكن</option>
-                                {placesList.map(p => (
-                                    <option key={p.id} value={p.id.toString()}>{p.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="relative flex-1 md:w-32">
-                            <select
-                                name="user"
-                                defaultValue={user}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right bg-white"
-                                dir="rtl"
-                            >
-                                <option value="">كل المستخدمين</option>
-                                {usersList.map(u => (
-                                    <option key={u.id} value={u.id.toString()}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.username}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="relative flex-1 md:w-64">
-                            <input
-                                type="text"
-                                name="search"
-                                defaultValue={search}
-                                className="w-full pr-4 pl-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right"
-                                placeholder="اسم المركز، المسؤول أو الهاتف..."
-                                dir="rtl"
-                            />
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-gray-400" />
-                            </div>
-                        </div>
-                    </form>
+                    <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+                        <CentersFilters places={placesList} users={usersList} />
+                    </Suspense>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -222,11 +158,7 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
                                 </tr>
                             ))}
                             {centers.length === 0 && !errorMessage && (
-                                <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-500">
-                                        لا توجد مراكز לעرضها
-                                    </td>
-                                </tr>
+                                <EmptyState message="لا توجد مراكز לעرضها" colSpan={6} />
                             )}
                         </tbody>
                     </table>

@@ -66,7 +66,7 @@ export default async function DocumentsPage() {
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
+        {/* <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
           <div className="flex w-full md:w-auto gap-2">
             <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0">
               إعادة ضبط
@@ -94,7 +94,7 @@ export default async function DocumentsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="overflow-x-auto">
           <table className="w-full text-right">

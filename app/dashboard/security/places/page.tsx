@@ -4,6 +4,11 @@ import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
 import { Place } from "@/types/security";
 import DeleteButton from "@/components/DeleteButton";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import PlacesFilters from "@/components/security/PlacesFilters";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,17 +39,13 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="text-right">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-1">إدارة الأماكن</h2>
-                    <p className="text-gray-500 text-sm">عرض وتعديل كافة المواقع والمنشآت المسجلة في النظام.</p>
-                </div>
-                <Link href="/dashboard/security/places/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-                    إضافة مكان جديد
-                    <Plus className="w-4 h-4 ml-2" />
-                </Link>
-            </div>
+            <PageHeader 
+                title="إدارة الأماكن"
+                description="عرض وتعديل كافة المواقع والمنشآت المسجلة في النظام."
+                addLink="/dashboard/security/places/add"
+                addLabel="إضافة مكان جديد"
+                breadcrumbs={[{ label: "الأمان", href: "/dashboard/security" }, { label: "الأماكن", active: true }]}
+            />
 
             {errorMessage && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -53,45 +54,33 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
                 </div>
             )}
 
-            {/* Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-                    <h3 className="text-gray-500 text-xs mb-1 text-right">إجمالي الأماكن</h3>
-                    <span className="text-2xl font-bold text-gray-900">{totalPlaces}</span>
-                </div>
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-                    <h3 className="text-gray-500 text-xs mb-1 text-right">الأماكن النشطة</h3>
-                    <span className="text-2xl font-bold text-gray-900">{totalPlaces}</span>
-                </div>
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-                    <h3 className="text-gray-500 text-xs mb-1 text-right">المراكز المرتبطة</h3>
-                    <span className="text-2xl font-bold text-gray-900">—</span>
-                </div>
-                <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-                    <h3 className="text-gray-500 text-xs mb-1 text-right">آخر تحديث</h3>
-                    <span className="text-sm font-bold text-gray-900 mt-1">الآن</span>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard 
+                    title="إجمالي الأماكن"
+                    value={totalPlaces}
+                />
+                <StatCard 
+                    title="الأماكن النشطة"
+                    value={totalPlaces}
+                />
+                <StatCard 
+                    title="المراكز المرتبطة"
+                    value="—"
+                />
+                <StatCard 
+                    title="آخر تحديث"
+                    value="الآن"
+                    valueClassName="text-sm text-gray-900 mt-1"
+                />
             </div>
 
             {/* Table Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
                 {/* Search */}
                 <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
-                    <form className="flex w-full md:w-auto gap-2" method="GET">
-                        <button type="submit" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0">
-                            بحث
-                        </button>
-                        <div className="relative flex-1 md:w-80">
-                            <input
-                                type="text"
-                                name="search"
-                                defaultValue={search}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right"
-                                placeholder="بحث باسم المكان أو الموقع"
-                                dir="rtl"
-                            />
-                        </div>
-                    </form>
+                    <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+                        <PlacesFilters />
+                    </Suspense>
                     <div className="text-xs font-bold text-gray-600">
                         إجمالي النتائج: {totalPlaces} مكان
                     </div>
@@ -145,11 +134,7 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
                                 </tr>
                             ))}
                             {places.length === 0 && !errorMessage && (
-                                <tr>
-                                    <td colSpan={5} className="py-8 text-center text-gray-500">
-                                        لا توجد أماكن לעرضها
-                                    </td>
-                                </tr>
+                                <EmptyState message="لا توجد أماكن לעرضها" colSpan={5} />
                             )}
                         </tbody>
                     </table>

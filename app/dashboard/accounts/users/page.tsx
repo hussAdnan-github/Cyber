@@ -3,12 +3,18 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
 import { User } from "@/types/user";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import UsersFilters from "@/components/accounts/UsersFilters";
+import { Suspense } from "react";
 
 // This tells Next.js to dynamically render the page on each request, 
 // so it always fetches fresh data from the external API
 export const dynamic = 'force-dynamic';
 
-export default async function UsersPage() {
+export default async function UsersPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
   let users: User[] = [];
   let totalUsers = 0;
   let activeUsers = 0;
@@ -16,10 +22,29 @@ export default async function UsersPage() {
   let errorMessage = "";
 
   try {
-    const response = await api.get<ApiResponse<User>>('/users/');
+    const query = new URLSearchParams();
+    if (searchParams?.search) query.set('search', searchParams.search as string);
+    // role & status filtering can be applied if API supports it, 
+    // or we can filter in memory later if the API returns everything.
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+
+    const response = await api.get<ApiResponse<User>>(`/users/${queryString}`);
     if (response.data.success) {
-      console.log(response.data.data);
       users = response.data.data.results;
+      
+      // Apply memory filtering for role and status if they exist
+      if (searchParams?.role === 'superuser') {
+        users = users.filter(u => u.is_superuser);
+      } else if (searchParams?.role === 'user') {
+        users = users.filter(u => !u.is_superuser);
+      }
+
+      if (searchParams?.status === 'active') {
+        users = users.filter(u => u.is_active);
+      } else if (searchParams?.status === 'inactive') {
+        users = users.filter(u => !u.is_active);
+      }
+
       totalUsers = response.data.data.count;
       // In case active/inactive needs to be calculated from current page results
       // Or from a specific API endpoint. We'll approximate here based on current results:
@@ -35,16 +60,14 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">المستخدمون</h2>
-          <p className="text-gray-500 text-sm">إدارة حسابات المستخدمين</p>
-        </div>
-        <button className="bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-md flex items-center text-sm font-bold transition-colors shadow-md">
-          <UserPlus className="w-5 h-5 ml-2" />
-          إضافة مستخدم جديد
-        </button>
-      </div>
+      <PageHeader 
+        title="المستخدمون"
+        description="إدارة حسابات المستخدمين"
+        breadcrumbs={[{ label: "الحسابات", href: "/dashboard/accounts" }, { label: "المستخدمين", active: true }]}
+        addLink="/dashboard/accounts/users/add"
+        addLabel="إضافة مستخدم جديد"
+        addButtonIcon={<UserPlus className="w-5 h-5 ml-2" />}
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -54,63 +77,32 @@ export default async function UsersPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-          <div className="text-right">
-            <h3 className="text-gray-500 text-sm mb-1">إجمالي المستخدمين</h3>
-            <div className="text-3xl font-bold text-primary mb-1">{totalUsers}</div>
-            <p className="text-xs text-success flex items-center justify-end">جميع الحسابات المسجلة</p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-             <Users className="w-6 h-6 text-primary" />
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-          <div className="text-right">
-            <h3 className="text-gray-500 text-sm mb-1">نشط حالياً</h3>
-            <div className="text-3xl font-bold text-success mb-1">{activeUsers}</div>
-            <p className="text-xs text-gray-400">حسابات مفعلة</p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-             <Zap className="w-6 h-6 text-success" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-          <div className="text-right">
-            <h3 className="text-gray-500 text-sm mb-1">غير نشط</h3>
-            <div className="text-3xl font-bold text-warning mb-1">{inactiveUsers}</div>
-            <p className="text-xs text-gray-400">حسابات بحاجة إلى مراجعة</p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
-             <AlertCircle className="w-6 h-6 text-warning" />
-          </div>
-        </div>
+        <StatCard 
+          title="إجمالي المستخدمين"
+          value={totalUsers}
+          icon={<Users className="w-6 h-6 text-primary" />}
+        />
+        <StatCard 
+          title="نشط حالياً"
+          value={activeUsers}
+          icon={<Zap className="w-6 h-6 text-success" />}
+          iconBgClassName="bg-green-50"
+          valueClassName="text-success"
+        />
+        <StatCard 
+          title="غير نشط"
+          value={inactiveUsers}
+          icon={<AlertCircle className="w-6 h-6 text-warning" />}
+          iconBgClassName="bg-orange-50"
+          valueClassName="text-warning"
+        />
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 mt-6 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex gap-3">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input 
-              type="text" 
-              className="block w-full pr-10 pl-3 py-2.5 border border-gray-200 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" 
-              placeholder="البحث بالاسم، البريد الإلكتروني أو المعرف..." 
-            />
-          </div>
-          <div className="flex gap-2">
-            <select className="border border-gray-200 rounded-md text-sm px-4 py-2.5 text-gray-600 bg-white focus:outline-none">
-              <option>اكتب للبحث أو اختر من الفئات</option>
-            </select>
-            <select className="border border-gray-200 rounded-md text-sm px-4 py-2.5 text-gray-600 bg-white focus:outline-none">
-              <option>اكتب للبحث أو اختر من الفئات</option>
-            </select>
-            <button className="border border-gray-200 rounded-md p-2.5 text-gray-500 hover:bg-gray-50">
-              <Filter className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="p-4 border-b border-gray-100">
+          <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+            <UsersFilters />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -168,11 +160,7 @@ export default async function UsersPage() {
                 </tr>
               ))}
               {users.length === 0 && !errorMessage && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    لا يوجد مستخدمين لعرضهم
-                  </td>
-                </tr>
+                <EmptyState message="لا يوجد مستخدمين لعرضهم" colSpan={5} />
               )}
             </tbody>
           </table>

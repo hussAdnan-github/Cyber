@@ -1,16 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { setAuthCookies } from "@/app/actions/auth";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const response = await api.post('/login/', { username, password });
+      
+      if (response.data?.success && response.data?.data?.token) {
+        const { token, ...userData } = response.data.data;
+        
+        // Save token and user data in secure cookies via server action
+        await setAuthCookies(token, userData);
+        
+        // Redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        setError(response.data?.message || "بيانات الدخول غير صحيحة");
+      }
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      // Try to extract a specific error message if the backend provides one
+      const errMessage = err.response?.data?.message || err.response?.data?.error || "حدث خطأ أثناء محاولة تسجيل الدخول. يرجى التحقق من بياناتك.";
+      setError(errMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -27,6 +57,12 @@ export default function LoginPage() {
           <p className="text-blue-100/70 text-sm">مرحباً بك مجدداً! يرجى تسجيل الدخول إلى حسابك.</p>
         </div>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-3 rounded-lg mb-6 text-sm text-center font-bold" dir="rtl">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-6 text-right" dir="rtl">
           <div className="space-y-2">
             <label className="text-sm font-medium text-white block">اسم المستخدم</label>
@@ -36,9 +72,12 @@ export default function LoginPage() {
               </div>
               <input 
                 type="text" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all backdrop-blur-sm"
                 placeholder="أدخل اسم المستخدم"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -51,14 +90,18 @@ export default function LoginPage() {
               </div>
               <input 
                 type={showPassword ? "text" : "password"} 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all backdrop-blur-sm"
                 placeholder="أدخل كلمة المرور"
                 required
+                disabled={isLoading}
               />
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 left-0 pl-3 flex items-center text-white/50 hover:text-white transition-colors"
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -75,9 +118,17 @@ export default function LoginPage() {
 
           <button 
             type="submit" 
-            className="w-full bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#1d4ed8] hover:to-[#2563eb] text-white font-bold py-3.5 rounded-lg shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98] mt-6"
+            disabled={isLoading}
+            className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#1d4ed8] hover:to-[#2563eb] text-white font-bold py-3.5 rounded-lg shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98] mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            تسجيل الدخول
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                جاري الدخول...
+              </>
+            ) : (
+              "تسجيل الدخول"
+            )}
           </button>
         </form>
       </div>

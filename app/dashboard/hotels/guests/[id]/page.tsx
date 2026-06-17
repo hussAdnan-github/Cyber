@@ -101,10 +101,21 @@ export default function EditGuestPage() {
         router.push('/dashboard/hotels/guests');
         router.refresh();
       } else {
-        setSubmitError(response.data?.message || "فشل في حفظ التعديلات");
+        const errors = response.data?.errors || response.data?.message;
+        
+        const errorMsg = typeof errors === 'object' 
+          ? Object.values(errors).flat().join(" | ") 
+          : (errors || "فشل في حفظ التعديلات");
+        
+        setSubmitError(errorMsg as string);
       }
     } catch (error: any) {
-      setSubmitError(error?.response?.data?.message || error.message || "حدث خطأ غير متوقع");
+      const errors = error?.response?.data?.errors || error?.response?.data?.message;
+      const errorMsg = typeof errors === 'object' 
+        ? Object.values(errors).flat().join(" | ") 
+        : (errors || error.message || "حدث خطأ غير متوقع");
+        
+      setSubmitError(errorMsg as string);
     }
   };
 

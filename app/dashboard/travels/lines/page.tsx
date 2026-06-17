@@ -5,6 +5,10 @@ import { ApiResponse } from "@/types/api";
 import { LineTravel } from "@/types/travel";
 import DeleteButton from "@/components/DeleteButton";
 import LineFilters from "@/components/LineFilters";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +16,7 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
   const searchParams = await props.searchParams;
   const place_from = typeof searchParams.place_from === 'string' ? searchParams.place_from : undefined;
   const place_to = typeof searchParams.place_to === 'string' ? searchParams.place_to : undefined;
+  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
 
   let lines: LineTravel[] = [];
   let totalLines = 0;
@@ -23,7 +28,7 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
     if (placesRes.data?.success) placesList = placesRes.data.data.results || [];
 
     const response = await api.get<ApiResponse<LineTravel>>('/office_travel/line_travel/', {
-      params: { place_from, place_to }
+      params: { place_from, place_to, search }
     });
     if (response.data.success) {
       lines = response.data.data.results;
@@ -38,25 +43,14 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">خطوط السفر</h2>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2 text-sm bg-white rounded-lg p-1 shadow-sm border border-gray-100">
-             <button className="px-4 py-1.5 rounded-md text-gray-600 hover:bg-gray-50 transition-colors">بحري</button>
-             <button className="px-4 py-1.5 rounded-md text-gray-600 hover:bg-gray-50 transition-colors">بري</button>
-             <button className="px-4 py-1.5 rounded-md text-gray-600 hover:bg-gray-50 transition-colors">جوي</button>
-             <button className="px-4 py-1.5 rounded-md bg-blue-600 text-white font-bold transition-colors shadow-sm">الكل</button>
-             <span className="text-xs font-bold text-gray-500 mr-2 ml-1">تصفية حسب نوع السفر</span>
-          </div>
-          <Link href="/dashboard/travels/lines/add" className="bg-success hover:bg-green-600 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-            إضافة خط سفر جديد
-            <Plus className="w-4 h-4 ml-2" />
-          </Link>
-        </div>
-      </div>
+      <PageHeader 
+        title="خطوط السفر"
+        description="إدارة خطوط السفر ومسارات الرحلات."
+        breadcrumbs={[{ label: "السفريات", href: "/dashboard/travels" }, { label: "الخطوط", active: true }]}
+        addLink="/dashboard/travels/lines/add"
+        addLabel="إضافة خط سفر جديد"
+        addButtonClassName="bg-success hover:bg-green-600 text-white"
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -65,51 +59,38 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
         </div>
       )}
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-            <Map className="w-5 h-5 text-blue-500" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">إجمالي المسارات</h3>
-            <span className="text-2xl font-bold text-gray-900">{totalLines}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-            <Activity className="w-5 h-5 text-success" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">الرحلات النشطة</h3>
-            <span className="text-2xl font-bold text-gray-900">—</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-            <Building className="w-5 h-5 text-blue-500" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">شركات النقل</h3>
-            <span className="text-2xl font-bold text-gray-900">—</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-orange-500" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">المسافرون اليوم</h3>
-            <span className="text-2xl font-bold text-gray-900">0</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="إجمالي المسارات"
+          value={totalLines}
+          icon={<Map className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="الرحلات النشطة"
+          value="—"
+          icon={<Activity className="w-5 h-5 text-success" />}
+          iconBgClassName="bg-green-50"
+        />
+        <StatCard 
+          title="شركات النقل"
+          value="—"
+          icon={<Building className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="المسافرون اليوم"
+          value="0"
+          icon={<User className="w-5 h-5 text-orange-500" />}
+          iconBgClassName="bg-orange-50"
+        />
       </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
-        <div className="p-5 border-b border-gray-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4 text-right flex-row-reverse">
-          <h3 className="font-bold text-gray-800 text-lg shrink-0">تفاصيل خطوط السفر</h3>
-          <LineFilters places={placesList} />
+        <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 text-right flex-row-reverse">
+          
+          <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full md:w-1/2"></div>}>
+            <LineFilters places={placesList} />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -150,11 +131,7 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
                 </tr>
               ))}
               {lines.length === 0 && !errorMessage && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">
-                    لا توجد خطوط سفر مسجلة
-                  </td>
-                </tr>
+                <EmptyState message="لا توجد خطوط سفر مسجلة" colSpan={6} />
               )}
             </tbody>
           </table>

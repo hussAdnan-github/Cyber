@@ -4,16 +4,42 @@ import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
 import { Traveler } from "@/types/travel";
 import DeleteButton from "@/components/DeleteButton";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import PassengerFilters from "@/components/travels/PassengerFilters";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
-export default async function PassengersPage() {
+export default async function PassengersPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
+  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
+  const trip = typeof searchParams.trip === 'string' ? searchParams.trip : undefined;
+  const nationality = typeof searchParams.nationality === 'string' ? searchParams.nationality : undefined;
+  const trip__travel = typeof searchParams.trip__travel === 'string' ? searchParams.trip__travel : undefined;
+  const type_id = typeof searchParams.type_id === 'string' ? searchParams.type_id : undefined;
+
   let travelers: Traveler[] = [];
   let totalTravelers = 0;
   let errorMessage = "";
+  let tripsList: any[] = [];
+  let nationalitiesList: any[] = [];
+  let companiesList: any[] = [];
 
   try {
-    const response = await api.get<ApiResponse<Traveler>>('/office_travel/traveler/');
+    const [tripsRes, natRes, compRes] = await Promise.all([
+      api.get('/office_travel/trip/'),
+      api.get('/office_security/nationality/'),
+      api.get('/office_travel/travel/')
+    ]);
+    if (tripsRes.data?.success) tripsList = tripsRes.data.data.results || [];
+    if (natRes.data?.success) nationalitiesList = natRes.data.data.results || [];
+    if (compRes.data?.success) companiesList = compRes.data.data.results || [];
+
+    const response = await api.get<ApiResponse<Traveler>>('/office_travel/traveler/', { 
+      params: { search, trip, nationality, trip__travel, type_id } 
+    });
     if (response.data.success) {
       travelers = response.data.data.results;
       totalTravelers = response.data.data.count;
@@ -27,31 +53,13 @@ export default async function PassengersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">إدارة بيانات المسافرين</h2>
-          <p className="text-gray-500 text-sm">استعراض وتحديث سجلات المسافرين وحالاتهم الأمنية والتقييمية.</p>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0">
-              بحث
-            </button>
-            <div className="relative">
-              <input 
-                type="text" 
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right w-64"
-                placeholder="بحث عن مسافر..."
-                dir="rtl"
-              />
-            </div>
-          </div>
-          <Link href="/dashboard/travels/passengers/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-            إضافة مسافر جديد
-          </Link>
-        </div>
-      </div>
+      <PageHeader 
+        title="إدارة بيانات المسافرين"
+        description="استعراض وتحديث سجلات المسافرين وحالاتهم الأمنية والتقييمية."
+        breadcrumbs={[{ label: "السفريات", href: "/dashboard/travels" }, { label: "المسافرين", active: true }]}
+        addLink="/dashboard/travels/passengers/add"
+        addLabel="إضافة مسافر جديد"
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -60,30 +68,34 @@ export default async function PassengersPage() {
         </div>
       )}
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-xs mb-1 text-right">إجمالي المسافرين</h3>
-          <span className="text-3xl font-bold text-gray-900">{totalTravelers}</span>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-xs mb-1 text-right">تقييم ممتاز</h3>
-          <span className="text-3xl font-bold text-success">—</span>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-xs mb-1 text-right">تقييم سيئ</h3>
-          <span className="text-3xl font-bold text-danger">—</span>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-xs mb-1 text-right">رحلات اليوم</h3>
-          <span className="text-3xl font-bold text-gray-900">—</span>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="إجمالي المسافرين"
+          value={totalTravelers}
+        />
+        <StatCard 
+          title="تقييم ممتاز"
+          value="—"
+          valueClassName="text-success"
+        />
+        <StatCard 
+          title="تقييم سيئ"
+          value="—"
+          valueClassName="text-danger"
+        />
+        <StatCard 
+          title="رحلات اليوم"
+          value="—"
+        />
       </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
-        <div className="p-5 border-b border-gray-100 bg-white text-right">
-          <h3 className="font-bold text-gray-800 text-lg">قائمة المسافرين المسجلين</h3>
+        <div className="p-5 border-b border-gray-100 bg-white flex flex-col lg:flex-row justify-between items-center gap-4 text-right">
+          <h3 className="font-bold text-gray-800 text-lg w-full lg:w-auto text-right">قائمة المسافرين المسجلين</h3>
+          <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full lg:w-2/3"></div>}>
+            <PassengerFilters trips={tripsList} nationalities={nationalitiesList} companies={companiesList} />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -141,11 +153,7 @@ export default async function PassengersPage() {
                 </tr>
               ))}
               {travelers.length === 0 && !errorMessage && (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-gray-500">
-                    لا يوجد مسافرين مسجلين
-                  </td>
-                </tr>
+                <EmptyState message="لا يوجد مسافرين مسجلين" colSpan={8} />
               )}
             </tbody>
           </table>

@@ -1,33 +1,38 @@
-import { Trash2, Edit, Eye } from "lucide-react";
+import { Trash2, Edit, Eye, Shield, Users } from "lucide-react";
 import Link from "next/link";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function RolesPage() {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">الأدوار والصلاحيات</h2>
-          <p className="text-gray-500 text-sm">أضف الأدوار وعدل صلاحياتها حسب أقسام النظام.</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
+      <PageHeader 
+        title="الأدوار والصلاحيات"
+        description="أضف الأدوار وعدل صلاحياتها حسب أقسام النظام."
+        breadcrumbs={[{ label: "الحسابات", href: "/dashboard/accounts" }, { label: "الأدوار", active: true }]}
+        addLink=""
+        addLabel="إضافة دور"
+        addButtonClassName="bg-[#00a65a] hover:bg-[#008d4c] text-white"
+        extraActions={
+          <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm">
             سجل التدقيق
           </button>
-          <button className="bg-[#00a65a] hover:bg-[#008d4c] text-white px-5 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
-            إضافة دور
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end">
-          <h3 className="text-gray-500 text-sm mb-2">إجمالي المستخدمين</h3>
-          <span className="text-3xl font-bold text-gray-900">7</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end">
-          <h3 className="text-gray-500 text-sm mb-2">الأدوار المسجلة</h3>
-          <span className="text-3xl font-bold text-gray-900">2</span>
-        </div>
+        <StatCard 
+          title="إجمالي المستخدمين"
+          value="7"
+          icon={<Users className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="الأدوار المسجلة"
+          value="2"
+          icon={<Shield className="w-5 h-5 text-emerald-500" />}
+          iconBgClassName="bg-green-50"
+        />
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">

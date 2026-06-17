@@ -14,6 +14,7 @@ export default function LineFilters({ places }: LineFiltersProps) {
   
   const [placeFrom, setPlaceFrom] = useState(searchParams.get("place_from") || "");
   const [placeTo, setPlaceTo] = useState(searchParams.get("place_to") || "");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
 
   const handleFilter = (e: FormEvent) => {
     e.preventDefault();
@@ -25,12 +26,16 @@ export default function LineFilters({ places }: LineFiltersProps) {
     if (placeTo) params.set("place_to", placeTo);
     else params.delete("place_to");
 
+    if (search) params.set("search", search);
+    else params.delete("search");
+
     replace(`${pathname}?${params.toString()}`);
   };
 
   const clearFilters = () => {
     setPlaceFrom("");
     setPlaceTo("");
+    setSearch("");
     replace(pathname);
   };
 
@@ -63,6 +68,16 @@ export default function LineFilters({ places }: LineFiltersProps) {
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
+      </div>
+      <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+        <input 
+          type="text" 
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full md:w-48 px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary text-right"
+          placeholder="بحث في خطوط السفر..."
+          dir="rtl"
+        />
       </div>
       <div className="flex gap-2 w-full md:w-auto justify-end">
         <button type="submit" className="bg-[#0f172a] hover:bg-gray-800 text-white px-6 py-2 rounded-md font-bold transition-colors shadow-sm flex-1 md:flex-none">

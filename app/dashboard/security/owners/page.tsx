@@ -4,6 +4,11 @@ import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
 import { Owner, Nationality } from "@/types/security";
 import DeleteButton from "@/components/DeleteButton";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import OwnersFilters from "@/components/security/OwnersFilters";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -49,17 +54,13 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="text-right">
-                    <h2 className="text-2xl font-bold text-primary mb-1">قائمة الملاك</h2>
-                    <p className="text-gray-500 text-sm">إدارة ومتابعة بيانات ملاك المنشآت والوحدات في النظام.</p>
-                </div>
-                <Link href="/dashboard/security/owners/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-                    إضافة مالك جديد
-                    <Plus className="w-4 h-4 ml-2" />
-                </Link>
-            </div>
+            <PageHeader 
+                title="قائمة الملاك"
+                description="إدارة ومتابعة بيانات ملاك المنشآت والوحدات في النظام."
+                addLink="/dashboard/security/owners/add"
+                addLabel="إضافة مالك جديد"
+                breadcrumbs={[{ label: "الأمان", href: "/dashboard/security" }, { label: "الملاك", active: true }]}
+            />
 
             {errorMessage && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -70,67 +71,10 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
 
             {/* Table Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                {/* Filters */}
                 <div className="p-5 border-b border-gray-100 bg-gray-50/50">
-                    <form className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end" method="GET">
-                        <div className="space-y-2 text-right">
-                            <label className="text-xs font-bold text-gray-700">البحث بالاسم</label>
-                            <input
-                                type="text"
-                                name="search"
-                                defaultValue={search}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right placeholder-gray-400"
-                                placeholder="أدخل اسم المالك..."
-                                dir="rtl"
-                            />
-                        </div>
-                        <div className="space-y-2 text-right">
-                            <label className="text-xs font-bold text-gray-700">رقم الجوال</label>
-                            <input
-                                type="text"
-                                name="phone"
-                                defaultValue={phone}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right placeholder-gray-400"
-                                placeholder="رقم الجوال..."
-                                dir="rtl"
-                            />
-                        </div>
-                        <div className="space-y-2 text-right">
-                            <label className="text-xs font-bold text-gray-700">الجنسية</label>
-                            <select
-                                name="nationality"
-                                defaultValue={nationality}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right bg-white"
-                                dir="rtl"
-                            >
-                                <option value="">كل الجنسيات</option>
-                                {nationalitiesList.map(n => (
-                                    <option key={n.id} value={n.id.toString()}>{n.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-2 text-right">
-                            <label className="text-xs font-bold text-gray-700">نوع الهوية</label>
-                            <select
-                                name="type_id"
-                                defaultValue={type_id}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right bg-white"
-                                dir="rtl"
-                            >
-                                <option value="">الكل</option>
-                                <option value="1">بطاقة الهوية</option>
-                                <option value="2">جواز سفر</option>
-                            </select>
-                        </div>
-                        <div className="flex gap-2 mb-0.5">
-                            <button type="submit" className="bg-blue-50 text-primary border border-blue-100 hover:bg-blue-100 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors w-full flex-1">
-                                تطبيق الفلترة
-                            </button>
-                            <Link href="/dashboard/security/owners" className="text-gray-500 hover:text-gray-700 px-4 py-2.5 text-sm font-bold transition-colors shrink-0 flex items-center justify-center">
-                                مسح
-                            </Link>
-                        </div>
-                    </form>
+                    <Suspense fallback={<div className="h-16 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+                        <OwnersFilters nationalities={nationalitiesList} />
+                    </Suspense>
                 </div>
 
                 {/* Table */}
@@ -179,11 +123,7 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
                                 </tr>
                             ))}
                             {owners.length === 0 && !errorMessage && (
-                                <tr>
-                                    <td colSpan={7} className="py-8 text-center text-gray-500">
-                                        لا يوجد ملاك לעرضهم
-                                    </td>
-                                </tr>
+                                <EmptyState message="لا يوجد ملاك לעرضهم" colSpan={7} />
                             )}
                         </tbody>
                     </table>
@@ -198,20 +138,22 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
                 </div>
             </div>
 
-            {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-                    <h3 className="text-gray-500 text-sm mb-2 text-right">إجمالي الملاك</h3>
-                    <span className="text-3xl font-bold text-primary">{totalOwners}</span>
-                </div>
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-                    <h3 className="text-gray-500 text-sm mb-2 text-right">النتائج الحالية</h3>
-                    <span className="text-3xl font-bold text-success">{totalOwners}</span>
-                </div>
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-                    <h3 className="text-gray-500 text-sm mb-2 text-right">تنبيهات الوثائق</h3>
-                    <span className="text-3xl font-bold text-danger">0</span>
-                </div>
+                <StatCard 
+                    title="إجمالي الملاك"
+                    value={totalOwners}
+                    valueClassName="text-primary"
+                />
+                <StatCard 
+                    title="النتائج الحالية"
+                    value={totalOwners}
+                    valueClassName="text-success"
+                />
+                <StatCard 
+                    title="تنبيهات الوثائق"
+                    value="0"
+                    valueClassName="text-danger"
+                />
             </div>
         </div>
     );

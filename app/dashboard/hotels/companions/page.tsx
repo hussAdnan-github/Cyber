@@ -5,9 +5,13 @@ import { ApiResponse } from "@/types/api";
 import { Companion } from "@/types/hotel";
 import DeleteButton from "@/components/DeleteButton";
 import CompanionFilters from "@/components/CompanionFilters";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
-
+ 
 export default async function CompanionsPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams;
   const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
@@ -44,16 +48,13 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">إدارة المرافقين</h2>
-          <p className="text-gray-500 text-sm">تتبع وإدارة بيانات المرافقين المسجلين مع النزلاء الأساسيين في المنشأة.</p>
-        </div>
-        <Link href="/dashboard/hotels/companions/new" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-          إضافة مرافق جديد
-        </Link>
-      </div>
+      <PageHeader 
+        title="إدارة المرافقين"
+        description="تتبع وإدارة بيانات المرافقين المسجلين مع النزلاء الأساسيين في المنشأة."
+        breadcrumbs={[{ label: "الفنادق", href: "/dashboard/hotels" }, { label: "المرافقين", active: true }]}
+        addLink="/dashboard/hotels/companions/new"
+        addLabel="إضافة مرافق جديد"
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-bold flex items-center gap-2 justify-end">
@@ -62,50 +63,40 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
         </div>
       )}
 
-      {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-            <Users className="w-5 h-5 text-blue-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">إجمالي المرافقين</h3>
-            <span className="text-2xl font-bold text-gray-900">{totalCompanions}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-emerald-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">نشط حالياً</h3>
-            <span className="text-2xl font-bold text-emerald-500">{totalCompanions}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-yellow-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">تقييمات ممتازة</h3>
-            <span className="text-2xl font-bold text-gray-900">0</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-            <ShieldAlert className="w-5 h-5 text-red-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">تنبيهات</h3>
-            <span className="text-2xl font-bold text-red-500">0</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="إجمالي المرافقين"
+          value={totalCompanions}
+          icon={<Users className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="نشط حالياً"
+          value={totalCompanions}
+          icon={<Zap className="w-5 h-5 text-emerald-500" />}
+          iconBgClassName="bg-green-50"
+          valueClassName="text-emerald-500"
+        />
+        <StatCard 
+          title="تقييمات ممتازة"
+          value="0"
+          icon={<CheckCircle className="w-5 h-5 text-yellow-500" />}
+          iconBgClassName="bg-yellow-50"
+        />
+        <StatCard 
+          title="تنبيهات"
+          value="0"
+          icon={<ShieldAlert className="w-5 h-5 text-red-500" />}
+          iconBgClassName="bg-red-50"
+          valueClassName="text-red-500"
+        />
       </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
         <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-          <CompanionFilters hotels={hotelsList} nationalities={nationalitiesList} />
+          <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+            <CompanionFilters hotels={hotelsList} nationalities={nationalitiesList} />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -166,11 +157,7 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-gray-500">
-                    لا يوجد مرافقين مسجلين حالياً
-                  </td>
-                </tr>
+                <EmptyState message="لا يوجد مرافقين مسجلين حالياً" colSpan={8} />
               )}
             </tbody>
           </table>

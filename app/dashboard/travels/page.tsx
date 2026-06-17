@@ -15,9 +15,9 @@ export default async function TravelsDashboardPage() {
   try {
     const [companiesRes, linesRes, tripsRes, passengersRes] = await Promise.all([
       api.get('/office_travel/travel/'),
-      api.get('/office_travel/travel_line/'),
-      api.get('/office_travel/trips/'),
-      api.get('/office_travel/passenger/')
+      api.get('/office_travel/line_travel/'),
+      api.get('/office_travel/trip/'),
+      api.get('/office_travel/traveler/')
     ]);
 
     if (companiesRes.data?.success) companiesCount = companiesRes.data.data.count || 0;

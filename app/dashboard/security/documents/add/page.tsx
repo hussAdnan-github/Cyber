@@ -25,7 +25,7 @@ export default function AddDocumentPage() {
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const response = await api.get('/office_security/black_list/');
+        const response = await api.get('/office_security/blacklist/');
         if (response.data?.success) {
           setBlacklist(response.data.data.results || []);
         }
@@ -41,10 +41,19 @@ export default function AddDocumentPage() {
     setSubmitError("");
     try {
       const formData = new FormData();
-      formData.append("number_id", data.number_id);
+      if (data.number_id) {
+        formData.append("number_id", data.number_id);
+      } else {
+        formData.append("number_id", "");
+      }
       
-      if (data.type_id) formData.append("type_id", data.type_id);
-      if (data.black_list) formData.append("black_list", String(data.black_list));
+      if (data.type_id) {
+        formData.append("type_id", data.type_id);
+      }
+      
+      if (data.black_list) {
+        formData.append("black_list", String(data.black_list));
+      }
 
       if (data.pic && data.pic.length > 0) {
         formData.append("pic", data.pic[0]);
@@ -93,11 +102,47 @@ export default function AddDocumentPage() {
           {/* Form Content */}
           <div className="p-8 space-y-6 text-right">
             
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">اختيار الشخص في القائمة السوداء *</label>
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <label className="w-full md:w-32 font-bold text-gray-700">نوع الهوية</label>
               <select 
-                {...register("black_list", { required: "الشخص مطلوب" })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-white"
+                {...register("type_id")}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                dir="rtl"
+              >
+                <option value="">اختر نوع الهوية...</option>
+                <option value="1">جواز سفر</option>
+                <option value="2">بطاقة شخصية / الهوية</option>
+                <option value="3">شهادة ميلاد</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <label className="w-full md:w-32 font-bold text-gray-700">رقم الهوية</label>
+              <input 
+                type="text" 
+                {...register("number_id")}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                dir="rtl"
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <label className="w-full md:w-32 font-bold text-gray-700">صورة الهوية</label>
+              <div className="flex-1 p-2 border border-gray-200 rounded-lg bg-white flex items-center">
+                <input 
+                  type="file" 
+                  {...register("pic")}
+                  className="text-sm text-gray-500 file:ml-4 file:py-1 file:px-3 file:rounded file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-100 hover:file:bg-gray-200 focus:outline-none cursor-pointer"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <label className="w-full md:w-32 font-bold text-gray-700">القائمة السوداء</label>
+              <select 
+                {...register("black_list")}
+                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                 dir="rtl"
               >
                 <option value="">اختر الشخص...</option>
@@ -105,56 +150,6 @@ export default function AddDocumentPage() {
                   <option key={person.id} value={person.id}>{person.name}</option>
                 ))}
               </select>
-              {errors.black_list && <p className="text-red-500 text-xs mt-1">{errors.black_list.message}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">نوع الهوية *</label>
-                <select 
-                  {...register("type_id", { required: "نوع الهوية مطلوب" })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
-                  dir="rtl"
-                >
-                  <option value="">اختر نوع الهوية...</option>
-                  <option value="1">جواز سفر</option>
-                  <option value="2">بطاقة شخصية</option>
-                  <option value="3">شهادة ميلاد</option>
-                </select>
-                {errors.type_id && <p className="text-red-500 text-xs mt-1">{errors.type_id.message}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">رقم الهوية *</label>
-                <input 
-                  type="text" 
-                  {...register("number_id", { required: "رقم الهوية مطلوب" })}
-                  placeholder="مثال: 1234567890"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-white"
-                  dir="rtl"
-                />
-                {errors.number_id && <p className="text-red-500 text-xs mt-1">{errors.number_id.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">صورة الوثيقة *</label>
-              <div className="flex items-center justify-end p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50/50">
-                <input 
-                  type="file" 
-                  {...register("pic", { required: "صورة الوثيقة مطلوبة" })}
-                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f172a] file:text-white hover:file:bg-gray-800 focus:outline-none cursor-pointer"
-                  dir="rtl"
-                />
-              </div>
-              {errors.pic && <p className="text-red-500 text-xs mt-1">{errors.pic.message}</p>}
-            </div>
-
-            {/* Preview Area */}
-            <div className="bg-gray-50 rounded-xl border border-gray-100 flex flex-col items-center justify-center min-h-[200px] mt-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 mb-4">
-                <ImageIcon className="w-8 h-8" />
-              </div>
-              <p className="text-gray-400 text-sm font-bold">ارفع صورة الوثيقة لربطها بالشخص</p>
             </div>
 
             {/* Action Buttons */}

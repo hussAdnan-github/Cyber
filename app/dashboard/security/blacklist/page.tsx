@@ -5,6 +5,12 @@ import { ApiResponse } from "@/types/api";
 import { BlacklistEntry } from "@/types/security";
 import { User } from "@/types/user";
 import DeleteButton from "@/components/DeleteButton";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import BlacklistFilters from "@/components/security/BlacklistFilters";
+import NotificationsWidget from "@/components/security/NotificationsWidget";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -46,24 +52,14 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="text-right flex items-center gap-2">
-           <div>
-             <div className="flex items-center gap-2 text-gray-500 text-xs mb-2">
-               <span className="text-danger font-bold">القائمة السوداء</span>
-               <span>&lt;</span>
-               <span>الرئيسية</span>
-             </div>
-             <h2 className="text-2xl font-bold text-gray-800 mb-1">سجل القائمة السوداء</h2>
-             <p className="text-gray-500 text-sm">إدارة الأشخاص الممنوعين أو الذين يحتاجون متابعة أمنية.</p>
-           </div>
-        </div>
-        <Link href="/dashboard/security/blacklist/add" className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-          إضافة للقائمة السوداء
-          <Plus className="w-4 h-4 ml-2" />
-        </Link>
-      </div>
+      <PageHeader 
+        title="سجل القائمة السوداء"
+        description="إدارة الأشخاص الممنوعين أو الذين يحتاجون متابعة أمنية."
+        addLink="/dashboard/security/blacklist/add"
+        addLabel="إضافة للقائمة السوداء"
+        addButtonClassName="bg-red-600 hover:bg-red-700 text-white"
+        breadcrumbs={[{ label: "الرئيسية", href: "/dashboard" }, { label: "القائمة السوداء", active: true }]}
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -71,6 +67,9 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
           <p className="text-sm font-bold">{errorMessage}</p>
         </div>
       )}
+
+      {/* Real-time Notifications Widget */}
+      <NotificationsWidget />
 
       {/* Alert */}
       <div className="bg-red-50 border border-red-100 rounded-lg p-5 flex items-start gap-4">
@@ -86,59 +85,28 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
         </div>
       </div>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-sm mb-2 text-right">إجمالي السجلات</h3>
-          <span className="text-3xl font-bold text-gray-900">{totalBlacklist}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-sm mb-2 text-right">نتائج البحث</h3>
-          <span className="text-3xl font-bold text-gray-900">{totalBlacklist}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-sm mb-2 text-right">مؤشرات عالية الخطورة</h3>
-          <span className="text-3xl font-bold text-danger">0</span>
-        </div>
+        <StatCard 
+          title="إجمالي السجلات"
+          value={totalBlacklist}
+        />
+        <StatCard 
+          title="نتائج البحث"
+          value={totalBlacklist}
+        />
+        <StatCard 
+          title="مؤشرات عالية الخطورة"
+          value="0"
+          valueClassName="text-danger"
+        />
       </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
         <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-          <form className="flex w-full md:w-auto gap-2" method="GET">
-            <Link href="/dashboard/security/blacklist" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0 flex items-center justify-center">
-              إعادة ضبط
-            </Link>
-            <button type="submit" className="bg-[#0f172a] hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm shrink-0">
-              بحث
-            </button>
-            <div className="relative flex-1 md:w-48">
-              <select 
-                name="user_created"
-                defaultValue={user_created}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right bg-white"
-                dir="rtl"
-              >
-                <option value="">كل المستخدمين</option>
-                {usersList.map(u => (
-                  <option key={u.id} value={u.id.toString()}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.username}</option>
-                ))}
-              </select>
-            </div>
-            <div className="relative flex-1 md:w-64">
-              <input 
-                type="text" 
-                name="search"
-                defaultValue={search}
-                className="w-full pr-4 pl-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-right"
-                placeholder="بحث بالاسم، السبب..."
-                dir="rtl"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-            </div>
-          </form>
+          <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+            <BlacklistFilters users={usersList} />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -187,11 +155,7 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
                 </tr>
               ))}
               {blacklist.length === 0 && !errorMessage && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">
-                    لا توجد سجلات לעرضها
-                  </td>
-                </tr>
+                <EmptyState message="لا توجد سجلات לעرضها" colSpan={6} />
               )}
             </tbody>
           </table>

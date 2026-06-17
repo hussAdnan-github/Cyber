@@ -21,7 +21,7 @@ type HotelFormData = {
 
 export default function AddHotelPage() {
   const router = useRouter();
-  
+
   const [places, setPlaces] = useState<any[]>([]);
   const [owners, setOwners] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -37,7 +37,7 @@ export default function AddHotelPage() {
           api.get('/office_security/onwer/'),
           api.get('/users/')
         ]);
-        
+
         if (placesRes.data?.success) setPlaces(placesRes.data.data.results || []);
         if (ownersRes.data?.success) setOwners(ownersRes.data.data.results || []);
         if (usersRes.data?.success) setUsers(usersRes.data.data.results || []);
@@ -45,7 +45,7 @@ export default function AddHotelPage() {
         console.error("Error fetching dropdowns:", error);
       }
     };
-    
+
     fetchDropdowns();
   }, []);
 
@@ -60,15 +60,25 @@ export default function AddHotelPage() {
       };
 
       const response = await api.post('/hotal/hotel/', payload);
-      
+
       if (response.data?.success || response.status === 201 || response.status === 200) {
         router.push('/dashboard/hotels/list');
         router.refresh();
       } else {
-        setSubmitError(response.data?.message || "فشل في حفظ البيانات");
+        const errors = response.data?.errors || response.data?.message;
+        const errorMsg = typeof errors === 'object' 
+          ? Object.values(errors).flat().join(" | ") 
+          : (errors || "فشل في حفظ البيانات");
+        
+        setSubmitError(errorMsg as string);
       }
     } catch (error: any) {
-      setSubmitError(error?.response?.data?.message || error.message || "حدث خطأ غير متوقع");
+      const errors = error?.response?.data?.errors || error?.response?.data?.message;
+      const errorMsg = typeof errors === 'object' 
+        ? Object.values(errors).flat().join(" | ") 
+        : (errors || error.message || "حدث خطأ غير متوقع");
+        
+      setSubmitError(errorMsg as string);
     }
   };
 
@@ -78,8 +88,8 @@ export default function AddHotelPage() {
         {/* Header */}
         <div className="flex justify-between items-end mb-6 text-right border-b border-gray-100 pb-4">
           <div>
-             <h2 className="text-2xl font-bold text-gray-800 mb-1">إضافة فندق جديد</h2>
-             <p className="text-sm text-gray-500">أدخل تفاصيل المنشأة الفندقية وربطها بالمكان والمالك والمستخدم المسؤول.</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">إضافة فندق جديد</h2>
+            <p className="text-sm text-gray-500">أدخل تفاصيل المنشأة الفندقية وربطها بالمكان والمالك والمستخدم المسؤول.</p>
           </div>
         </div>
 
@@ -90,7 +100,7 @@ export default function AddHotelPage() {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          
+
           {/* Main Form Area (Right Side) */}
           <div className="flex-1 space-y-6 order-2 lg:order-1">
             {/* Basic Info */}
@@ -99,11 +109,11 @@ export default function AddHotelPage() {
                 <h3 className="text-lg font-bold text-gray-800">بيانات الفندق الأساسية</h3>
                 <div className="w-8 h-8 bg-blue-50 text-blue-500 rounded flex items-center justify-center font-bold text-lg">i</div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">المكان *</label>
-                  <select 
+                  <select
                     {...register("place", { required: "المكان مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
                     dir="rtl"
@@ -117,8 +127,8 @@ export default function AddHotelPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">اسم الفندق *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("name", { required: "اسم الفندق مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400"
                     placeholder="مثال: فندق بلازا الرياض"
@@ -126,10 +136,10 @@ export default function AddHotelPage() {
                   />
                   {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                 </div>
-                
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">المستخدم المرتبط *</label>
-                  <select 
+                  <select
                     {...register("user", { required: "المستخدم مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
                     dir="rtl"
@@ -143,7 +153,7 @@ export default function AddHotelPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">المالك *</label>
-                  <select 
+                  <select
                     {...register("onwer", { required: "المالك مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
                     dir="rtl"
@@ -159,8 +169,8 @@ export default function AddHotelPage() {
 
               <div className="mt-6 text-right">
                 <label className="block text-xs font-bold text-gray-700 mb-2">العنوان بالتفصيل *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   {...register("location", { required: "العنوان مطلوب" })}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400"
                   placeholder="المدينة، الحي، الشارع، المعالم القريبة"
@@ -178,12 +188,12 @@ export default function AddHotelPage() {
                   <Phone className="w-4 h-4" />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right mb-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">رقم الهاتف الإضافي</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("phone2")}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400"
                     placeholder="اختياري"
@@ -192,8 +202,8 @@ export default function AddHotelPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">رقم الهاتف *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("phone", { required: "رقم الهاتف مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400 font-mono"
                     placeholder="05xxxxxxxx"
@@ -205,8 +215,8 @@ export default function AddHotelPage() {
 
               <div className="text-right">
                 <label className="block text-xs font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   {...register("email")}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400"
                   placeholder="hotel@example.com"
@@ -220,7 +230,7 @@ export default function AddHotelPage() {
               <div className="text-right mb-4">
                 <label className="block text-xs font-bold text-gray-700 mb-2">نبذة عن الفندق</label>
               </div>
-              <textarea 
+              <textarea
                 {...register("description")}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 h-32 resize-none placeholder-gray-400"
                 placeholder="اكتب وصفاً مختصراً للمرافق والخدمات والسياسات الخاصة بالفندق"
@@ -232,7 +242,7 @@ export default function AddHotelPage() {
 
           {/* Sidebar Actions Area (Left Side) */}
           <div className="w-full lg:w-80 flex flex-col gap-6 order-1 lg:order-2 shrink-0">
-            
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-right">
               <div className="flex justify-end items-center gap-2 mb-4">
                 <h3 className="font-bold text-gray-800">إرشادات التسجيل</h3>
@@ -262,15 +272,15 @@ export default function AddHotelPage() {
         <div className="flex justify-between items-center pt-6 border-t border-gray-100">
           <div className="text-xs text-gray-400">يتم حفظ البيانات داخل قاعدة بيانات النظام</div>
           <div className="flex gap-3">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => router.back()}
               className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-8 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
             >
               إلغاء
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSubmitting}
               className="bg-[#0f172a] hover:bg-gray-800 disabled:bg-gray-600 text-white px-8 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
             >

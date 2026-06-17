@@ -5,6 +5,9 @@ import { ApiResponse } from "@/types/api";
 import { Hotel } from "@/types/hotel";
 import DeleteButton from "@/components/DeleteButton";
 import HotelFilters from "@/components/HotelFilters";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
 import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
@@ -44,44 +47,41 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
 
   return (
     <div className="space-y-6">
-      {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-blue-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">إجمالي الفنادق</h3>
-            <span className="text-2xl font-bold text-gray-900">{totalHotels}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">الفنادق النشطة</h3>
-            <span className="text-2xl font-bold text-emerald-500">{totalHotels}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-            <Users className="w-5 h-5 text-purple-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">إجمالي النزلاء</h3>
-            <span className="text-2xl font-bold text-gray-900">--</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center">
-          <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-            <UserCog className="w-5 h-5 text-gray-500" />
-          </div>
-          <div className="text-right">
-            <h3 className="text-gray-500 text-xs mb-1">إجمالي المرافقين</h3>
-            <span className="text-2xl font-bold text-gray-900">--</span>
-          </div>
-        </div>
+      <PageHeader 
+        title="قائمة الفنادق"
+        description="إدارة جميع الفنادق والمنشآت السياحية المسجلة"
+        breadcrumbs={[{ label: "الفنادق", active: true }]}
+        addLink=""
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="إجمالي الفنادق"
+          value={totalHotels}
+          icon={<Building2 className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="الفنادق النشطة"
+          value={totalHotels}
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+          iconBgClassName="bg-green-50"
+          iconTextClassName="text-emerald-500"
+          valueClassName="text-emerald-500"
+        />
+        <StatCard 
+          title="إجمالي النزلاء"
+          value="--"
+          icon={<Users className="w-5 h-5 text-purple-500" />}
+          iconBgClassName="bg-purple-50"
+          iconTextClassName="text-purple-500"
+        />
+        <StatCard 
+          title="إجمالي المرافقين"
+          value="--"
+          icon={<UserCog className="w-5 h-5 text-gray-500" />}
+          iconBgClassName="bg-gray-50"
+          iconTextClassName="text-gray-500"
+        />
       </div>
 
       {errorMessage && (
@@ -159,11 +159,7 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-gray-500">
-                    لا توجد فنادق مسجلة حالياً
-                  </td>
-                </tr>
+                <EmptyState message="لا توجد فنادق مسجلة حالياً" colSpan={8} />
               )}
             </tbody>
           </table>

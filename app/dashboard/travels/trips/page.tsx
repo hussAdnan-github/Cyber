@@ -5,6 +5,10 @@ import { ApiResponse } from "@/types/api";
 import { Trip } from "@/types/travel";
 import DeleteButton from "@/components/DeleteButton";
 import TripFilters from "@/components/TripFilters";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -44,20 +48,14 @@ export default async function TripsPage(props: { searchParams: Promise<{ [key: s
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">إدارة الرحلات</h2>
-          <p className="text-gray-500 text-sm">مراقبة وتنسيق جميع رحلات السفر الجارية والمجدولة.</p>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <TripFilters companies={companiesList} lines={linesList} />
-          <Link href="/dashboard/travels/trips/add" className="bg-[#059669] hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-            جدولة رحلة جديدة
-            <Plus className="w-4 h-4 ml-2" />
-          </Link>
-        </div>
-      </div>
+      <PageHeader 
+        title="إدارة الرحلات"
+        description="مراقبة وتنسيق جميع رحلات السفر الجارية والمجدولة."
+        breadcrumbs={[{ label: "السفريات", href: "/dashboard/travels" }, { label: "الرحلات", active: true }]}
+        addLink="/dashboard/travels/trips/add"
+        addLabel="جدولة رحلة جديدة"
+        addButtonClassName="bg-[#059669] hover:bg-emerald-700 text-white"
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -66,51 +64,41 @@ export default async function TripsPage(props: { searchParams: Promise<{ [key: s
         </div>
       )}
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-            <Bus className="w-5 h-5 text-blue-500" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">إجمالي الرحلات</h3>
-            <span className="text-2xl font-bold text-gray-900">{totalTrips}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-            <RotateCw className="w-5 h-5 text-success" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">رحلات اليوم</h3>
-            <span className="text-2xl font-bold text-gray-900">—</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-warning" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">قيد الانتظار</h3>
-            <span className="text-2xl font-bold text-gray-900">—</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-            <Ban className="w-5 h-5 text-danger" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">رحلات ملغاة</h3>
-            <span className="text-2xl font-bold text-gray-900">0</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="إجمالي الرحلات"
+          value={totalTrips}
+          icon={<Bus className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="رحلات اليوم"
+          value="—"
+          icon={<RotateCw className="w-5 h-5 text-success" />}
+          iconBgClassName="bg-green-50"
+        />
+        <StatCard 
+          title="قيد الانتظار"
+          value="—"
+          icon={<Clock className="w-5 h-5 text-warning" />}
+          iconBgClassName="bg-orange-50"
+        />
+        <StatCard 
+          title="رحلات ملغاة"
+          value="0"
+          icon={<Ban className="w-5 h-5 text-danger" />}
+          iconBgClassName="bg-red-50"
+          valueClassName="text-danger"
+        />
       </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
-        <div className="p-5 border-b border-gray-100 bg-white flex justify-between items-center text-right flex-row-reverse">
-          <h3 className="font-bold text-gray-800 text-lg">جدول الرحلات التفصيلي</h3>
-          <div className="flex gap-2">
+        <div className="p-5 border-b border-gray-100 bg-white flex flex-col lg:flex-row justify-between items-center gap-4 text-right">
+          <h3 className="font-bold text-gray-800 text-lg w-full lg:w-auto text-right">جدول الرحلات التفصيلي</h3>
+          <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full lg:w-2/3"></div>}>
+            <TripFilters companies={companiesList} lines={linesList} />
+          </Suspense>
+          <div className="flex gap-2 w-full lg:w-auto justify-end">
             <button className="text-gray-400 hover:text-gray-600 p-1.5 transition-colors">
               <Download className="w-4 h-4" />
             </button>
@@ -171,11 +159,7 @@ export default async function TripsPage(props: { searchParams: Promise<{ [key: s
                 </tr>
               ))}
               {trips.length === 0 && !errorMessage && (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-gray-500">
-                    لا توجد رحلات מסجلة
-                  </td>
-                </tr>
+                <EmptyState message="لا توجد رحلات مسجلة" colSpan={9} />
               )}
             </tbody>
           </table>

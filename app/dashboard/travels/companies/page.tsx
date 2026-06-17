@@ -5,6 +5,10 @@ import { ApiResponse } from "@/types/api";
 import { Company } from "@/types/travel";
 import DeleteButton from "@/components/DeleteButton";
 import CompanyFilters from "@/components/CompanyFilters";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
@@ -44,16 +48,14 @@ export default async function CompaniesPage(props: { searchParams: Promise<{ [ke
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">شركات السفر المعتمدة</h2>
-          <p className="text-gray-500 text-sm">إدارة وتتبع أداء الشركات ومزودي خدمات السفر.</p>
-        </div>
-        <Link href="/dashboard/travels/companies/add" className="bg-success hover:bg-green-600 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-          إضافة شركة جديدة
-        </Link>
-      </div>
+      <PageHeader 
+        title="شركات السفر المعتمدة"
+        description="إدارة وتتبع أداء الشركات ومزودي خدمات السفر."
+        breadcrumbs={[{ label: "السفريات", href: "/dashboard/travels" }, { label: "الشركات", active: true }]}
+        addLink="/dashboard/travels/companies/add"
+        addLabel="إضافة شركة جديدة"
+        addButtonClassName="bg-success hover:bg-green-600 text-white"
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -62,11 +64,11 @@ export default async function CompaniesPage(props: { searchParams: Promise<{ [ke
         </div>
       )}
 
-      {/* Table Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        {/* Filter */}
         <div className="p-5 border-b border-gray-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
-           <CompanyFilters places={placesList} users={usersList} />
+          <Suspense fallback={<div className="h-10 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+             <CompanyFilters places={placesList} users={usersList} />
+          </Suspense>
         </div>
 
         <div className="overflow-x-auto">
@@ -120,11 +122,7 @@ export default async function CompaniesPage(props: { searchParams: Promise<{ [ke
                 </tr>
               ))}
               {companies.length === 0 && !errorMessage && (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
-                    لا توجد شركات مسجلة
-                  </td>
-                </tr>
+                <EmptyState message="لا توجد شركات مسجلة" colSpan={7} />
               )}
             </tbody>
           </table>
@@ -138,20 +136,20 @@ export default async function CompaniesPage(props: { searchParams: Promise<{ [ke
         </div>
       </div>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-sm mb-2 text-right">إجمالي الشركات</h3>
-          <span className="text-3xl font-bold text-gray-900">{totalCompanies}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-sm mb-2 text-right">شركات نشطة</h3>
-          <span className="text-3xl font-bold text-success">{totalCompanies}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center min-h-[100px]">
-          <h3 className="text-gray-500 text-sm mb-2 text-right">الرحلات المجدولة</h3>
-          <span className="text-3xl font-bold text-gray-900">0</span>
-        </div>
+        <StatCard 
+          title="إجمالي الشركات"
+          value={totalCompanies}
+        />
+        <StatCard 
+          title="شركات نشطة"
+          value={totalCompanies}
+          valueClassName="text-success"
+        />
+        <StatCard 
+          title="الرحلات المجدولة"
+          value="0"
+        />
       </div>
     </div>
   );

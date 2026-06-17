@@ -17,8 +17,8 @@ export default async function SecurityDashboardPage() {
     const [placesRes, centersRes, ownersRes, blacklistRes, documentsRes] = await Promise.all([
       api.get('/office_security/places/'),
       api.get('/office_security/center/'),
-      api.get('/office_security/owners/'),
-      api.get('/office_security/black_list/'),
+      api.get('/office_security/onwer/'),
+      api.get('/office_security/blacklist/'),
       api.get('/office_security/documents/')
     ]);
 
