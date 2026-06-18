@@ -108,13 +108,13 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-sm mt-4">
+          {/* <div className="flex items-center justify-between text-sm mt-4">
             <a href="#" className="text-blue-300 hover:text-white transition-colors">نسيت كلمة المرور؟</a>
             <label className="flex items-center gap-2 cursor-pointer group">
               <span className="text-white/80 group-hover:text-white transition-colors">تذكرني</span>
               <input type="checkbox" className="rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 w-4 h-4 cursor-pointer" />
             </label>
-          </div>
+          </div> */}
 
           <button 
             type="submit" 

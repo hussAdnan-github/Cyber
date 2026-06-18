@@ -30,7 +30,7 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
       api.get('/office_security/places/'),
       api.get('/users/')
     ]);
-
+    
     if (hotelsRes.data && hotelsRes.data.success) {
       hotels = hotelsRes.data.data.results || [];
       totalHotels = hotelsRes.data.data.count || hotels.length;

@@ -7,6 +7,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import UsersFilters from "@/components/accounts/UsersFilters";
+import UserActions from "@/components/accounts/UserActions";
 import { Suspense } from "react";
 
 // This tells Next.js to dynamically render the page on each request, 
@@ -24,26 +25,14 @@ export default async function UsersPage(props: { searchParams: Promise<{ [key: s
   try {
     const query = new URLSearchParams();
     if (searchParams?.search) query.set('search', searchParams.search as string);
-    // role & status filtering can be applied if API supports it, 
-    // or we can filter in memory later if the API returns everything.
+    if (searchParams?.groups) query.set('groups', searchParams.groups as string);
+    if (searchParams?.is_active) query.set('is_active', searchParams.is_active as string);
+    
     const queryString = query.toString() ? `?${query.toString()}` : '';
 
     const response = await api.get<ApiResponse<User>>(`/users/${queryString}`);
     if (response.data.success) {
       users = response.data.data.results;
-      
-      // Apply memory filtering for role and status if they exist
-      if (searchParams?.role === 'superuser') {
-        users = users.filter(u => u.is_superuser);
-      } else if (searchParams?.role === 'user') {
-        users = users.filter(u => !u.is_superuser);
-      }
-
-      if (searchParams?.status === 'active') {
-        users = users.filter(u => u.is_active);
-      } else if (searchParams?.status === 'inactive') {
-        users = users.filter(u => !u.is_active);
-      }
 
       totalUsers = response.data.data.count;
       // In case active/inactive needs to be calculated from current page results
@@ -145,17 +134,7 @@ export default async function UsersPage(props: { searchParams: Promise<{ [key: s
                     )}
                   </td>
                   <td className="py-4 px-6 text-left">
-                    <div className="flex gap-2 justify-end">
-                      <Link href={`/dashboard/accounts/users/details/${user.id}`} className="p-2 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                      <button className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <UserActions userId={user.id} />
                   </td>
                 </tr>
               ))}

@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, FormEvent, useEffect } from "react";
 import { Search } from "lucide-react";
-import Link from "next/link";
+import { api } from "@/lib/api";
 
 export default function UsersFilters() {
   const searchParams = useSearchParams();
@@ -11,13 +11,31 @@ export default function UsersFilters() {
   const { replace } = useRouter();
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [role, setRole] = useState(searchParams.get("role") || "");
-  const [status, setStatus] = useState(searchParams.get("status") || "");
+  const [groupId, setGroupId] = useState(searchParams.get("groups") || "");
+  const [isActive, setIsActive] = useState(searchParams.get("is_active") || "");
+  const [groups, setGroups] = useState<{id: number, name: string}[]>([]);
+
+  useEffect(() => {
+    // Fetch groups for the dropdown
+    const fetchGroups = async () => {
+      try {
+        const res = await api.get('/group/');
+        if (res.data?.data?.results) {
+          setGroups(res.data.data.results);
+        } else if (Array.isArray(res.data)) {
+          setGroups(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch groups", err);
+      }
+    };
+    fetchGroups();
+  }, []);
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
-    setRole(searchParams.get("role") || "");
-    setStatus(searchParams.get("status") || "");
+    setGroupId(searchParams.get("groups") || "");
+    setIsActive(searchParams.get("is_active") || "");
   }, [searchParams]);
 
   const handleFilter = (e: FormEvent) => {
@@ -27,19 +45,19 @@ export default function UsersFilters() {
     if (search) params.set("search", search);
     else params.delete("search");
 
-    if (role) params.set("role", role);
-    else params.delete("role");
+    if (groupId) params.set("groups", groupId);
+    else params.delete("groups");
 
-    if (status) params.set("status", status);
-    else params.delete("status");
+    if (isActive) params.set("is_active", isActive);
+    else params.delete("is_active");
 
     replace(`${pathname}?${params.toString()}`);
   };
 
   const clearFilters = () => {
     setSearch("");
-    setRole("");
-    setStatus("");
+    setGroupId("");
+    setIsActive("");
     replace(pathname);
   };
 
@@ -60,24 +78,25 @@ export default function UsersFilters() {
       </div>
       <div className="flex flex-wrap gap-2">
         <select 
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
+          value={groupId}
+          onChange={(e) => setGroupId(e.target.value)}
           className="border border-gray-200 rounded-md text-sm px-4 py-2.5 text-gray-600 bg-white focus:outline-none text-right"
           dir="rtl"
         >
-          <option value="">كل الأدوار</option>
-          <option value="superuser">مدير</option>
-          <option value="user">مستخدم عادي</option>
+          <option value="">كل المجموعات</option>
+          {groups.map(g => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
         </select>
         <select 
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          value={isActive}
+          onChange={(e) => setIsActive(e.target.value)}
           className="border border-gray-200 rounded-md text-sm px-4 py-2.5 text-gray-600 bg-white focus:outline-none text-right"
           dir="rtl"
         >
           <option value="">كل الحالات</option>
-          <option value="active">نشط</option>
-          <option value="inactive">غير نشط</option>
+          <option value="true">نشط</option>
+          <option value="false">غير نشط</option>
         </select>
         <button type="submit" className="bg-[#0f172a] hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm">
           بحث
