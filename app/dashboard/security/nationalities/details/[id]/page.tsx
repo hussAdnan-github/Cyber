@@ -4,12 +4,18 @@ import { api } from "@/lib/api";
 
 export const dynamic = 'force-dynamic';
 
-export default async function DetailsPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function DetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   let data: any = null;
   let errorMessage = "";
 
   try {
-    const response = await api.get(`/office_security/nationality/${params.id}/`);
+    const response = await api.get(`/office_security/nationality/${id}/`);
     if (response.data && response.data.success) {
       data = response.data.data;
     } else {

@@ -11,7 +11,7 @@ export default function RolesPage() {
         title="الأدوار والصلاحيات"
         description="أضف الأدوار وعدل صلاحياتها حسب أقسام النظام."
         breadcrumbs={[{ label: "الحسابات", href: "/dashboard/accounts" }, { label: "الأدوار", active: true }]}
-        addLink=""
+        addLink="/dashboard/accounts/roles/add"
         addLabel="إضافة دور"
         addButtonClassName="bg-[#00a65a] hover:bg-[#008d4c] text-white"
         extraActions={
@@ -66,9 +66,9 @@ export default function RolesPage() {
                       <Link href={`/dashboard/accounts/roles/details/${role.id}`} className="p-2 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                         <Eye className="w-4 h-4" />
                       </Link>
-                      <button className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                      <Link href={`/dashboard/accounts/roles/edit/${role.id}`} className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
                         <Edit className="w-4 h-4" />
-                      </button>
+                      </Link>
                       <button className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>

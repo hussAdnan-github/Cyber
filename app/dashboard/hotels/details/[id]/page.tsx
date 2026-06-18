@@ -3,13 +3,17 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 
 export const dynamic = 'force-dynamic';
-
-export default async function HotelDetailsPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>; 
+}
+export default async function HotelDetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   let hotel: any = null;
   let errorMessage = "";
 
   try {
-    const response = await api.get(`/hotal/hotel/${params.id}/`);
+    const response = await api.get(`/hotal/hotel/${id}/`);
     if (response.data && response.data.success) {
       hotel = response.data.data;
     } else {

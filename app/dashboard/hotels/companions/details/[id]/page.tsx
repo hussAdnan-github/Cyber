@@ -4,12 +4,18 @@ import { api } from "@/lib/api";
 
 export const dynamic = 'force-dynamic';
 
-export default async function CompanionDetailsPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>; 
+}
+
+export default async function CompanionDetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   let companion: any = null;
   let errorMessage = "";
 
   try {
-    const response = await api.get(`/hotal/companions/${params.id}/`);
+    const response = await api.get(`/hotal/companions/${id}/`);
     if (response.data && response.data.success) {
       companion = response.data.data;
     } else {

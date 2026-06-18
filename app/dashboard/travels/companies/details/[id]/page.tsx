@@ -4,12 +4,17 @@ import { api } from "@/lib/api";
 
 export const dynamic = 'force-dynamic';
 
-export default async function CompanyDetailsPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+export default async function CompanyDetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   let company: any = null;
   let errorMessage = "";
 
   try {
-    const response = await api.get(`/office_travel/travel/${params.id}/`);
+    const response = await api.get(`/office_travel/travel/${id}/`);
     if (response.data && response.data.success) {
       company = response.data.data;
     } else {
