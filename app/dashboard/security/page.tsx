@@ -34,34 +34,52 @@ export default async function SecurityDashboardPage() {
   let recentBlacklist: any[] = [];
   let errorMessage = "";
 
-  const promises = [];
+  const canViewPlace = hasPermission('view_place');
+  const canViewCenter = hasPermission('view_center');
+  const canViewOwner = hasPermission('view_onwer');
+  const canViewBlacklist = hasPermission('view_blacklist');
+  const canViewDocuments = hasPermission('view_documents');
 
   try {
-    if (hasPermission('view_place')) {
-      promises.push(api.get('/office_security/places/').then(res => { if(res.data?.success) placesCount = res.data.data.count || 0; }).catch(() => {}));
+    const results = await Promise.allSettled([
+      canViewPlace ? api.get('/office_security/places/') : Promise.reject(new Error("No permission")),
+      canViewCenter ? api.get('/office_security/center/') : Promise.reject(new Error("No permission")),
+      canViewOwner ? api.get('/office_security/onwer/') : Promise.reject(new Error("No permission")),
+      canViewBlacklist ? api.get('/office_security/blacklist/') : Promise.reject(new Error("No permission")),
+      canViewDocuments ? api.get('/office_security/documents/') : Promise.reject(new Error("No permission"))
+    ]);
+
+    if (canViewPlace && results[0].status === 'fulfilled' && results[0].value.data?.success) {
+      placesCount = results[0].value.data.data.count || 0;
     }
-    if (hasPermission('view_center')) {
-      promises.push(api.get('/office_security/center/').then(res => { if(res.data?.success) centersCount = res.data.data.count || 0; }).catch(() => {}));
+    if (canViewCenter && results[1].status === 'fulfilled' && results[1].value.data?.success) {
+      centersCount = results[1].value.data.data.count || 0;
     }
-    if (hasPermission('view_onwer')) {
-      promises.push(api.get('/office_security/onwer/').then(res => { if(res.data?.success) ownersCount = res.data.data.count || 0; }).catch(() => {}));
+    if (canViewOwner && results[2].status === 'fulfilled' && results[2].value.data?.success) {
+      ownersCount = results[2].value.data.data.count || 0;
     }
-    if (hasPermission('view_blacklist')) {
-      promises.push(api.get('/office_security/blacklist/').then(res => { 
-        if(res.data?.success) {
-          blacklistCount = res.data.data.count || 0;
-          recentBlacklist = res.data.data.results?.slice(0, 5) || [];
-        }
-      }).catch(() => {}));
+    if (canViewBlacklist && results[3].status === 'fulfilled' && results[3].value.data?.success) {
+      blacklistCount = results[3].value.data.data.count || 0;
+      recentBlacklist = results[3].value.data.data.results?.slice(0, 5) || [];
     }
-    if (hasPermission('view_documents')) {
-      promises.push(api.get('/office_security/documents/').then(res => { if(res.data?.success) documentsCount = res.data.data.count || 0; }).catch(() => {}));
+    if (canViewDocuments && results[4].status === 'fulfilled' && results[4].value.data?.success) {
+      documentsCount = results[4].value.data.data.count || 0;
     }
 
-    await Promise.all(promises);
+    const attemptedRequests = results.filter((_, idx) => 
+      (idx === 0 && canViewPlace) || 
+      (idx === 1 && canViewCenter) || 
+      (idx === 2 && canViewOwner) || 
+      (idx === 3 && canViewBlacklist) || 
+      (idx === 4 && canViewDocuments)
+    );
+    if (attemptedRequests.length > 0 && attemptedRequests.every(r => r.status === 'rejected')) {
+      errorMessage = "فشل في جلب الإحصائيات من الخادم";
+    }
+
   } catch (error: any) {
     console.error("Error fetching security dashboard data:", error);
-    errorMessage = "فشل في جلب الإحصائيات من الخادم";
+    errorMessage = "حدث خطأ غير متوقع أثناء الاتصال بالخادم";
   }
 
   const showShortcuts = hasPermission('add_center') || hasPermission('add_place') || hasPermission('view_blacklist') || hasPermission('view_documents');

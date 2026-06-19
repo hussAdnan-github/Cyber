@@ -1,10 +1,25 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 
 export default function Topbar() {
   const pathname = usePathname();
-  
+  const [username, setUsername] = useState("المستخدم");
+   
+  useEffect(() => {
+    try {
+      const userDataStr = Cookies.get('user_data');
+      if (userDataStr) {
+        const userData = JSON.parse(decodeURIComponent(userDataStr));
+        setUsername(userData.username || userData.first_name || "المستخدم");
+      }
+    } catch (e) {
+      console.error('Failed to parse user_data cookie in Topbar', e);
+    }
+  }, []);
+
   let pageTitle = "لوحة التحكم";
   if (pathname.includes('/accounts/users/new')) pageTitle = "إضافة مستخدم";
   else if (pathname.includes('/accounts/users/edit')) pageTitle = "تعديل المستخدم";
@@ -48,10 +63,10 @@ export default function Topbar() {
         {/* User Profile */}
         <div className="flex items-center gap-3">
           <div className="flex flex-col text-left">
-             <span className="text-sm font-bold text-gray-800">admin</span>
+             <span className="text-sm font-bold text-gray-800">{username}</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-primary flex items-center justify-center overflow-hidden relative">
-             <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Admin" className="w-full h-full object-cover" />
+             <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`} alt={username} className="w-full h-full object-cover" />
              <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></div>
           </div>
         </div>

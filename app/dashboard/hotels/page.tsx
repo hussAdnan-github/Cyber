@@ -200,6 +200,7 @@ import { Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import Can from "@/components/auth/Can";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
 
@@ -211,49 +212,78 @@ export default async function HotelsDashboardPage() {
   let recentCompanions: any[] = [];
   let errorMessage = "";
 
+  // Parse permissions from cookies
+  const cookieStore = await cookies();
+  const userDataStr = cookieStore.get('user_data')?.value;
+  let permissions: string[] = [];
+  let isSuperuser = false;
+
+  if (userDataStr) {
+    try {
+      const userData = JSON.parse(decodeURIComponent(userDataStr));
+      permissions = userData.permissions || [];
+      isSuperuser = userData.is_superuser || false;
+    } catch (e) {
+      console.error("Failed to parse user_data on server", e);
+    }
+  }
+
+  const hasPermission = (perm: string) => isSuperuser || permissions.includes(perm);
+
+  const canViewHotel = hasPermission('view_hotel');
+  const canViewPerson = hasPermission('view_person');
+  const canViewCompanions = hasPermission('view_companions');
+
   try {
-    // تم استخدام Promise.allSettled بدلاً من Promise.all
-    // لضمان أنه لو فشل طلب واحد، لا تنهار الصفحة بالكامل وتجلب بقية البيانات المتاحة
     const results = await Promise.allSettled([
-      api.get('/hotal/hotel/'),
-      api.get('/hotal/person/'),
-      api.get('/hotal/companions/')
-    ]);
+      canViewHotel ? api.get('/hotal/hotel/') : Promise.reject(new Error("No permission for hotels")),
+      canViewPerson ? api.get('/hotal/person/') : Promise.reject(new Error("No permission for guests")),
+      canViewCompanions ? api.get('/hotal/companions/') : Promise.reject(new Error("No permission for companions"))
+    ]); 
 
     // 1. معالجة بيانات الفنادق
-    if (results[0].status === 'fulfilled') {
-      const hotelsRes = results[0].value;
-      if (hotelsRes.data?.success) {
-        hotelsCount = hotelsRes.data.data?.count || 0;
+    if (canViewHotel) {
+      if (results[0].status === 'fulfilled') {
+        const hotelsRes = results[0].value;
+        if (hotelsRes.data?.success) {
+          hotelsCount = hotelsRes.data.data?.count || 0;
+        }
+      } else {
+        console.error("فشل جلب بيانات الفنادق:", results[0].reason);
       }
-    } else {
-      console.error("فشل جلب بيانات الفنادق:", results[0].reason);
     }
 
     // 2. معالجة بيانات النزلاء
-    if (results[1].status === 'fulfilled') {
-      const guestsRes = results[1].value;
-      if (guestsRes.data?.success) {
-        guestsCount = guestsRes.data.data?.count || 0;
-        recentGuests = guestsRes.data.data?.results?.slice(0, 5) || [];
+    if (canViewPerson) {
+      if (results[1].status === 'fulfilled') {
+        const guestsRes = results[1].value;
+        if (guestsRes.data?.success) {
+          guestsCount = guestsRes.data.data?.count || 0;
+          recentGuests = guestsRes.data.data?.results?.slice(0, 5) || [];
+        }
+      } else {
+        console.error("فشل جلب بيانات النزلاء:", results[1].reason);
       }
-    } else {
-      console.error("فشل جلب بيانات النزلاء:", results[1].reason);
     }
 
     // 3. معالجة بيانات المرافقين
-    if (results[2].status === 'fulfilled') {
-      const companionsRes = results[2].value;
-      if (companionsRes.data?.success) {
-        companionsCount = companionsRes.data.data?.count || 0;
-        recentCompanions = companionsRes.data.data?.results?.slice(0, 5) || [];
+    if (canViewCompanions) {
+      if (results[2].status === 'fulfilled') {
+        const companionsRes = results[2].value;
+        if (companionsRes.data?.success) {
+          companionsCount = companionsRes.data.data?.count || 0;
+          recentCompanions = companionsRes.data.data?.results?.slice(0, 5) || [];
+        }
+      } else {
+        console.error("فشل جلب بيانات المرافقين:", results[2].reason);
       }
-    } else {
-      console.error("فشل جلب بيانات المرافقين:", results[2].reason);
     }
 
-    // إذا فشلت جميع الطلبات نُظهر رسالة خطأ للمستخدم
-    if (results.every(r => r.status === 'rejected')) {
+    // إذا فشلت الطلبات المسموح بها نُظهر رسالة خطأ
+    const attemptedRequests = results.filter((_, idx) => 
+      (idx === 0 && canViewHotel) || (idx === 1 && canViewPerson) || (idx === 2 && canViewCompanions)
+    );
+    if (attemptedRequests.length > 0 && attemptedRequests.every(r => r.status === 'rejected')) {
       errorMessage = "فشل في جلب الإحصائيات من الخادم";
     }
 
@@ -270,14 +300,16 @@ export default async function HotelsDashboardPage() {
           <p className="text-gray-500 text-sm">مزامنة البيانات الحية من الخادم</p>
         </div>
         <div className="flex gap-3">
-          <Link href="/dashboard/hotels/list" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
-            عرض الفنادق
-          </Link>
-        <Can permission="add_hotel">
+          {canViewHotel && (
+            <Link href="/dashboard/hotels/list" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
+              عرض الفنادق
+            </Link>
+          )}
+          <Can permission="add_hotel">
             <Link href="/dashboard/hotels/new" className="bg-[#111827] hover:bg-gray-800 text-white px-5 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
-            إضافة فندق جديد
-          </Link>
-        </Can>
+              إضافة فندق جديد
+            </Link>
+          </Can>
         </div>
       </div>
 
@@ -289,18 +321,24 @@ export default async function HotelsDashboardPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي الفنادق</h3>
-          <span className="text-3xl font-bold text-gray-900">{hotelsCount}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي النزلاء</h3>
-          <span className="text-3xl font-bold text-gray-900">{guestsCount}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي المرافقين</h3>
-          <span className="text-3xl font-bold text-gray-900">{companionsCount}</span>
-        </div>
+        {canViewHotel && (
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
+            <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي الفنادق</h3>
+            <span className="text-3xl font-bold text-gray-900">{hotelsCount}</span>
+          </div>
+        )}
+        {canViewPerson && (
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
+            <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي النزلاء</h3>
+            <span className="text-3xl font-bold text-gray-900">{guestsCount}</span>
+          </div>
+        )}
+        {canViewCompanions && (
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
+            <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي المرافقين</h3>
+            <span className="text-3xl font-bold text-gray-900">{companionsCount}</span>
+          </div>
+        )}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 border-r-4 border-r-warning flex flex-col items-end justify-center">
           <h3 className="text-gray-500 text-xs mb-2 text-right">نزلاء بتقييم سيئ</h3>
           <span className="text-3xl font-bold text-gray-900">0</span>
@@ -311,82 +349,86 @@ export default async function HotelsDashboardPage() {
         {/* Right Column - Tables */}
         <div className="flex-1 space-y-6 order-2 lg:order-1">
           {/* Recent Guests */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <Link href="/dashboard/hotels/guests" className="text-blue-600 text-sm font-bold hover:underline">عرض الكل</Link>
-              <h3 className="font-bold text-gray-800">آخر النزلاء المسجلين</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right">
-                <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-500">
-                    <th className="py-3 px-4 font-medium">النزيل</th>
-                    <th className="py-3 px-4 font-medium text-center">رقم الهوية</th>
-                    <th className="py-3 px-4 font-medium text-center">الفندق</th>
-                    <th className="py-3 px-4 font-medium text-left">التقييم</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentGuests.map(guest => (
-                    <tr key={guest.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-4 font-bold text-gray-800 text-sm">{guest.name}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{guest.number_id}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{guest.name_hotel || "-"}</td>
-                      <td className="py-4 px-4 text-left">
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
-                          {guest.evaluation ? `${guest.evaluation} نجوم` : "بدون"}
-                        </span>
-                      </td>
+          {canViewPerson && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+                <Link href="/dashboard/hotels/guests" className="text-blue-600 text-sm font-bold hover:underline">عرض الكل</Link>
+                <h3 className="font-bold text-gray-800">آخر النزلاء المسجلين</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-right">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-xs text-gray-500">
+                      <th className="py-3 px-4 font-medium">النزيل</th>
+                      <th className="py-3 px-4 font-medium text-center">رقم الهوية</th>
+                      <th className="py-3 px-4 font-medium text-center">الفندق</th>
+                      <th className="py-3 px-4 font-medium text-left">التقييم</th>
                     </tr>
-                  ))}
-                  {recentGuests.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500 text-sm">لا يوجد نزلاء</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentGuests.map(guest => (
+                      <tr key={guest.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td className="py-4 px-4 font-bold text-gray-800 text-sm">{guest.name}</td>
+                        <td className="py-4 px-4 text-center text-sm text-gray-600">{guest.number_id}</td>
+                        <td className="py-4 px-4 text-center text-sm text-gray-600">{guest.name_hotel || "-"}</td>
+                        <td className="py-4 px-4 text-left">
+                          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
+                            {guest.evaluation ? `${guest.evaluation} نجوم` : "بدون"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {recentGuests.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-4 text-center text-gray-500 text-sm">لا يوجد نزلاء</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Recent Companions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <Link href="/dashboard/hotels/companions" className="text-blue-600 text-sm font-bold hover:underline">عرض الكل</Link>
-              <h3 className="font-bold text-gray-800">آخر المرافقين المسجلين</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right">
-                <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-500">
-                    <th className="py-3 px-4 font-medium">المرافق</th>
-                    <th className="py-3 px-4 font-medium text-center">النزيل المرتبط</th>
-                    <th className="py-3 px-4 font-medium text-center">رقم الهوية</th>
-                    <th className="py-3 px-4 font-medium text-left">التقييم</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentCompanions.map(comp => (
-                    <tr key={comp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-4 font-bold text-gray-800 text-sm">{comp.name}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{comp.name_person || "-"}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{comp.number_id}</td>
-                      <td className="py-4 px-4 text-left">
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
-                          {comp.evaluation ? `${comp.evaluation} نجوم` : "بدون"}
-                        </span>
-                      </td>
+          {canViewCompanions && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+                <Link href="/dashboard/hotels/companions" className="text-blue-600 text-sm font-bold hover:underline">عرض الكل</Link>
+                <h3 className="font-bold text-gray-800">آخر المرافقين المسجلين</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-right">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-xs text-gray-500">
+                      <th className="py-3 px-4 font-medium">المرافق</th>
+                      <th className="py-3 px-4 font-medium text-center">النزيل المرتبط</th>
+                      <th className="py-3 px-4 font-medium text-center">رقم الهوية</th>
+                      <th className="py-3 px-4 font-medium text-left">التقييم</th>
                     </tr>
-                  ))}
-                  {recentCompanions.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500 text-sm">لا يوجد مرافقين</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentCompanions.map(comp => (
+                      <tr key={comp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td className="py-4 px-4 font-bold text-gray-800 text-sm">{comp.name}</td>
+                        <td className="py-4 px-4 text-center text-sm text-gray-600">{comp.name_person || "-"}</td>
+                        <td className="py-4 px-4 text-center text-sm text-gray-600">{comp.number_id}</td>
+                        <td className="py-4 px-4 text-left">
+                          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
+                            {comp.evaluation ? `${comp.evaluation} نجوم` : "بدون"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {recentCompanions.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-4 text-center text-gray-500 text-sm">لا يوجد مرافقين</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Left Column - Alerts & Status */}
