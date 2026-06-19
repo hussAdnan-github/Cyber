@@ -11,6 +11,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import BlacklistFilters from "@/components/security/BlacklistFilters";
 import NotificationsWidget from "@/components/security/NotificationsWidget";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,7 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
         addLabel="إضافة للقائمة السوداء"
         addButtonClassName="bg-red-600 hover:bg-red-700 text-white"
         breadcrumbs={[{ label: "الرئيسية", href: "/dashboard" }, { label: "القائمة السوداء", active: true }]}
+        can="add_blacklist"
       />
 
       {errorMessage && (
@@ -146,10 +148,14 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
                       <Link href={`/dashboard/security/blacklist/details/${item.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                         <Eye className="w-4 h-4" />
                       </Link>
-                      <Link href={`/dashboard/security/blacklist/${item.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </Link>
-                      <DeleteButton endpoint="/office_security/black_list/" id={item.id} />
+                      <Can permission="change_blacklist">
+                        <Link href={`/dashboard/security/blacklist/${item.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Can>
+                      <Can permission="delete_blacklist">
+                        <DeleteButton endpoint="/office_security/black_list/" id={item.id} />
+                      </Can>
                     </div>
                   </td>
                 </tr>

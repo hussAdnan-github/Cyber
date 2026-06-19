@@ -9,6 +9,7 @@ import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import PassengerFilters from "@/components/travels/PassengerFilters";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,7 @@ export default async function PassengersPage(props: { searchParams: Promise<{ [k
         breadcrumbs={[{ label: "السفريات", href: "/dashboard/travels" }, { label: "المسافرين", active: true }]}
         addLink="/dashboard/travels/passengers/add"
         addLabel="إضافة مسافر جديد"
+        can="add_traveler"
       />
 
       {errorMessage && (
@@ -144,10 +146,14 @@ export default async function PassengersPage(props: { searchParams: Promise<{ [k
                       <Link href={`/dashboard/travels/passengers/details/${traveler.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                         <Eye className="w-4 h-4" />
                       </Link>
-                      <Link href={`/dashboard/travels/passengers/${traveler.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </Link>
-                      <DeleteButton endpoint="/office_travel/traveler/" id={traveler.id} />
+                      <Can permission="change_traveler">
+                        <Link href={`/dashboard/travels/passengers/${traveler.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Can>
+                      <Can permission="delete_traveler">
+                        <DeleteButton endpoint="/office_travel/traveler/" id={traveler.id} />
+                      </Can>
                     </div>
                   </td>
                 </tr>

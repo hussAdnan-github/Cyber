@@ -9,6 +9,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,7 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
         addLink="/dashboard/travels/lines/add"
         addLabel="إضافة خط سفر جديد"
         addButtonClassName="bg-success hover:bg-green-600 text-white"
+        can="add_linetravel"
       />
 
       {errorMessage && (
@@ -122,10 +124,14 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
                       <Link href={`/dashboard/travels/lines/details/${line.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                         <Eye className="w-4 h-4" />
                       </Link>
-                      <Link href={`/dashboard/travels/lines/${line.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </Link>
-                      <DeleteButton endpoint="/office_travel/line_travel/" id={line.id} />
+                      <Can permission="change_linetravel">
+                        <Link href={`/dashboard/travels/lines/${line.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Can>
+                      <Can permission="delete_linetravel">
+                        <DeleteButton endpoint="/office_travel/line_travel/" id={line.id} />
+                      </Can>
                     </div>
                   </td>
                 </tr>

@@ -9,6 +9,7 @@ import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import OwnersFilters from "@/components/security/OwnersFilters";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,7 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
                 addLink="/dashboard/security/owners/add"
                 addLabel="إضافة مالك جديد"
                 breadcrumbs={[{ label: "الأمان", href: "/dashboard/security" }, { label: "الملاك", active: true }]}
+                can="add_onwer"
             />
 
             {errorMessage && (
@@ -114,10 +116,14 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
                                             <Link href={`/dashboard/security/owners/details/${item.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                                                 <Eye className="w-4 h-4" />
                                             </Link>
-                                            <Link href={`/dashboard/security/owners/${item.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                                                <Edit className="w-4 h-4" />
-                                            </Link>
-                                            <DeleteButton endpoint="/office_security/onwer/" id={item.id} />
+                                            <Can permission="change_onwer">
+                                                <Link href={`/dashboard/security/owners/${item.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                                                    <Edit className="w-4 h-4" />
+                                                </Link>
+                                            </Can>
+                                            <Can permission="delete_onwer">
+                                                <DeleteButton endpoint="/office_security/onwer/" id={item.id} />
+                                            </Can>
                                         </div>
                                     </td>
                                 </tr>

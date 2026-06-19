@@ -9,6 +9,7 @@ import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import PlacesFilters from "@/components/security/PlacesFilters";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,8 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
                 addLink="/dashboard/security/places/add"
                 addLabel="إضافة مكان جديد"
                 breadcrumbs={[{ label: "الأمان", href: "/dashboard/security" }, { label: "الأماكن", active: true }]}
-            />
+                can="add_place"
+          /> 
 
             {errorMessage && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -125,10 +127,14 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
                                             <Link href={`/dashboard/security/places/details/${place.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                                                 <Eye className="w-4 h-4" />
                                             </Link>
-                                            <Link href={`/dashboard/security/places/${place.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                                                <Edit className="w-4 h-4" />
-                                            </Link>
-                                            <DeleteButton endpoint="/office_security/places/" id={place.id} />
+                                            <Can permission="change_place">
+                                                <Link href={`/dashboard/security/places/${place.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                                                    <Edit className="w-4 h-4" />
+                                                </Link>
+                                            </Can>
+                                            <Can permission="delete_place">
+                                                <DeleteButton endpoint="/office_security/places/" id={place.id} />
+                                            </Can>
                                         </div>
                                     </td>
                                 </tr>
