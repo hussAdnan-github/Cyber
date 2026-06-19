@@ -6,26 +6,26 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
-interface UserActionsProps {
-  userId: number;
+interface RoleActionsProps {
+  roleId: number;
 }
 
-export default function UserActions({ userId }: UserActionsProps) {
+export default function RoleActions({ roleId }: RoleActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (!confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
+    if (!confirm("هل أنت متأكد من حذف هذا الدور؟")) {
       return;
     }
 
     setIsDeleting(true);
     try {
-      const response = await api.delete(`/users/${userId}/`);
+      const response = await api.delete(`/group/${roleId}/`);
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.refresh(); // Refresh the server component
       } else {
-        alert(response.data?.message || "فشل حذف المستخدم");
+        alert(response.data?.message || "فشل حذف الدور");
       }
     } catch (error: any) {
       console.error(error);
@@ -38,7 +38,7 @@ export default function UserActions({ userId }: UserActionsProps) {
   return (
     <div className="flex gap-2 justify-end">
       <Link
-        href={`/dashboard/accounts/users/details/${userId}`}
+        href={`/dashboard/accounts/roles/details/${roleId}`}
         className="p-2 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors"
         title="عرض التفاصيل"
       >
@@ -46,7 +46,7 @@ export default function UserActions({ userId }: UserActionsProps) {
       </Link>
 
       <Link
-        href={`/dashboard/accounts/users/edit/${userId}`}
+        href={`/dashboard/accounts/roles/edit/${roleId}`}
         className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors"
         title="تعديل"
       >

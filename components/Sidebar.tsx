@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logout } from "@/app/actions/auth";
+import Can from "@/components/auth/Can";
 
 function NavLink({ href, icon: Icon, children, exact = false }: { href: string, icon?: any, children: React.ReactNode, exact?: boolean }) {
   const pathname = usePathname();
@@ -96,8 +97,11 @@ export default function Sidebar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await logout();
-    router.push('/');
+    try {
+      await logout();
+    } finally {
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -120,41 +124,91 @@ export default function Sidebar() {
         <ul className="space-y-1">
           <NavLink href="/dashboard" icon={LayoutDashboard} exact>لوحة التحكم</NavLink>
           
-          <NavDropdown label="الحسابات" icon={Users} basePath="/dashboard/accounts">
-            <SubLink href="/dashboard/accounts/users">المستخدمون</SubLink>
-            <SubLink href="/dashboard/accounts/users/new">إضافة مستخدمين</SubLink>
-            <SubLink href="/dashboard/accounts/roles">الأدوار والصلاحيات</SubLink>
-            <SubLink href="/dashboard/accounts/audit">سجل التدقيق</SubLink>
-          </NavDropdown>
+          <Can permissions={['view_user',"change_user", "delete_user", "add_user", "view_group", "add_group", 'view_logentry']}>
+            <NavDropdown label="الحسابات" icon={Users} basePath="/dashboard/accounts">
+              <Can permission="view_user">
+                <SubLink href="/dashboard/accounts/users">المستخدمون</SubLink>
+              </Can>
+              <Can permission="add_user">
+                <SubLink href="/dashboard/accounts/users/add">إضافة مستخدمين</SubLink>
+              </Can>
+              <Can permissions={['view_group', 'view_permission']}>
+                <SubLink href="/dashboard/accounts/roles">الأدوار والصلاحيات</SubLink>
+              </Can>
+              <Can permission="view_logentry">
+                <SubLink href="/dashboard/accounts/audit">سجل التدقيق</SubLink>
+              </Can>
+            </NavDropdown>
+          </Can>
 
-          <NavDropdown label="الفنادق" icon={Hotel} basePath="/dashboard/hotels">
-            <SubLink href="/dashboard/hotels">لوحة تحكم الفنادق</SubLink>
-            <SubLink href="/dashboard/hotels/list">قائمة الفنادق</SubLink>
-            <SubLink href="/dashboard/hotels/new">إضافة فندق</SubLink>
-            <SubLink href="/dashboard/hotels/guests">قائمة النزلاء</SubLink>
-            <SubLink href="/dashboard/hotels/guests/new">إضافة نزيل</SubLink>
-            <SubLink href="/dashboard/hotels/companions">المرافقون</SubLink>
-          </NavDropdown>
+          <Can permissions={['view_hotel', 'add_hotel', 'view_person', 'add_person', 'view_companions']}>
+            <NavDropdown label="الفنادق" icon={Hotel} basePath="/dashboard/hotels">
+              <Can permission="view_hotel">
+                <SubLink href="/dashboard/hotels">لوحة تحكم الفنادق</SubLink>
+                <SubLink href="/dashboard/hotels/list">قائمة الفنادق</SubLink>
+              </Can>
+              <Can permission="add_hotel">
+                <SubLink href="/dashboard/hotels/new">إضافة فندق</SubLink>
+              </Can>
+              <Can permission="view_person">
+                <SubLink href="/dashboard/hotels/guests">قائمة النزلاء</SubLink>
+              </Can>
+              <Can permission="add_person">
+                <SubLink href="/dashboard/hotels/guests/new">إضافة نزيل</SubLink>
+              </Can>
+              <Can permission="view_companions">
+                <SubLink href="/dashboard/hotels/companions">المرافقون</SubLink>
+              </Can>
+            </NavDropdown>
+          </Can>
 
-          <NavDropdown label="الجهات الأمنية" icon={ShieldCheck} basePath="/dashboard/security">
-            <SubLink href="/dashboard/security">لوحة القيادة</SubLink>
-            <SubLink href="/dashboard/security/centers">المراكز الأمنية</SubLink>
-            <SubLink href="#">إضافة مركز</SubLink>
-            <SubLink href="/dashboard/security/places">الأماكن</SubLink>
-            <SubLink href="#">إضافة مكان</SubLink>
-            <SubLink href="/dashboard/security/owners">الملاك</SubLink>
-            <SubLink href="/dashboard/security/documents">المستندات</SubLink>
-            <SubLink href="/dashboard/security/blacklist">القائمة السوداء</SubLink>
-            <SubLink href="/dashboard/security/nationalities">الجنسيات</SubLink>
-          </NavDropdown>
+          <Can permissions={['view_center', 'view_place', 'view_documents', 'view_blacklist', 'view_nationality', 'view_onwer']}>
+            <NavDropdown label="الجهات الأمنية" icon={ShieldCheck} basePath="/dashboard/security">
+              <SubLink href="/dashboard/security">لوحة القيادة</SubLink>
+              <Can permission="view_center">
+                <SubLink href="/dashboard/security/centers">المراكز الأمنية</SubLink>
+              </Can>
+              <Can permission="add_center">
+                <SubLink href="/dashboard/security/centers/add">إضافة مركز</SubLink>
+              </Can>
+              <Can permission="view_place">
+                <SubLink href="/dashboard/security/places">الأماكن</SubLink>
+              </Can>
+              <Can permission="add_place">
+                <SubLink href="/dashboard/security/places/add">إضافة مكان</SubLink>
+              </Can>
+              <Can permission="view_onwer">
+                <SubLink href="/dashboard/security/owners">الملاك</SubLink>
+              </Can>
+              <Can permission="view_documents">
+                <SubLink href="/dashboard/security/documents">المستندات</SubLink>
+              </Can>
+              <Can permission="view_blacklist">
+                <SubLink href="/dashboard/security/blacklist">القائمة السوداء</SubLink>
+              </Can>
+              <Can permission="view_nationality">
+                <SubLink href="/dashboard/security/nationalities">الجنسيات</SubLink>
+              </Can>
+            </NavDropdown>
+          </Can>
 
-          <NavDropdown label="السفريات" icon={Plane} basePath="/dashboard/travels">
-            <SubLink href="/dashboard/travels">لوحة عمليات السفر</SubLink>
-            <SubLink href="/dashboard/travels/companies">شركات السفر</SubLink>
-            <SubLink href="/dashboard/travels/trips">إدارة الرحلات</SubLink>
-            <SubLink href="/dashboard/travels/lines">خطوط السفر</SubLink>
-            <SubLink href="/dashboard/travels/passengers">المسافرون</SubLink>
-          </NavDropdown>
+          <Can permissions={['view_travel', 'view_trip', 'view_linetravel', 'view_traveler']}>
+            <NavDropdown label="السفريات" icon={Plane} basePath="/dashboard/travels">
+              <Can permission="view_travel">
+                <SubLink href="/dashboard/travels">لوحة عمليات السفر</SubLink>
+                <SubLink href="/dashboard/travels/companies">شركات السفر</SubLink>
+              </Can>
+              <Can permission="view_trip">
+                <SubLink href="/dashboard/travels/trips">إدارة الرحلات</SubLink>
+              </Can>
+              <Can permission="view_linetravel">
+                <SubLink href="/dashboard/travels/lines">خطوط السفر</SubLink>
+              </Can>
+              <Can permission="view_traveler">
+                <SubLink href="/dashboard/travels/passengers">المسافرون</SubLink>
+              </Can>
+            </NavDropdown>
+          </Can>
         </ul>
       </nav>
 

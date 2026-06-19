@@ -1,15 +1,20 @@
 import { AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import PermissionsMatrix from "@/components/accounts/PermissionsMatrix";
 
 export const dynamic = 'force-dynamic';
-
-export default async function DetailsPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>; 
+}
+export default async function DetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   let data: any = null;
   let errorMessage = "";
 
   try {
-    const response = await api.get(`/groups/${params.id}/`);
+    const response = await api.get(`/group/${id}/`);
     if (response.data && response.data.success) {
       data = response.data.data;
     } else {
@@ -75,6 +80,17 @@ export default async function DetailsPage({ params }: { params: { id: string } }
              </div>
            ))}
         </div>
+
+        {data.permissions && Array.isArray(data.permissions) && (
+          <div className="mt-8 border-t border-gray-100 pt-6" dir="rtl">
+             <h4 className="font-bold text-gray-800 mb-4 text-right">صلاحيات الدور الممنوحة</h4>
+             <PermissionsMatrix 
+                permissions={data.permissions} 
+                selectedIds={data.permissions.map((p: any) => p.id || p)} 
+                readOnly={true} 
+             />
+          </div>
+        )}
       </div>
     </div>
   );

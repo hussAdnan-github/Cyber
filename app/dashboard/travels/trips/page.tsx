@@ -29,6 +29,7 @@ export default async function TripsPage(props: { searchParams: Promise<{ [key: s
       api.get('/office_travel/travel/'),
       api.get('/office_travel/line_travel/')
     ]);
+    
     if (companiesRes.data?.success) companiesList = companiesRes.data.data.results || [];
     if (linesRes.data?.success) linesList = linesRes.data.data.results || [];
 

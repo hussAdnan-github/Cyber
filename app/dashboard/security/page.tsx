@@ -1,10 +1,31 @@
 import { MapPin, Building, Users, ShieldAlert, FileText, Plus, TriangleAlert, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
 
 export default async function SecurityDashboardPage() {
+  const cookieStore = await cookies();
+  const userDataStr = cookieStore.get("user_data")?.value;
+  
+  let permissions: string[] = [];
+  let isSuperuser = false;
+
+  if (userDataStr) {
+    try {
+      // Decode if it's URI encoded, otherwise just parse
+      const decodedStr = userDataStr.startsWith('%') ? decodeURIComponent(userDataStr) : userDataStr;
+      const userData = JSON.parse(decodedStr);
+      permissions = userData.permissions || [];
+      isSuperuser = userData.is_superuser || false;
+    } catch (e) {
+      console.error("Failed to parse user_data on server", e);
+    }
+  }
+
+  const hasPermission = (codename: string) => isSuperuser || permissions.includes(codename);
+
   let placesCount = 0;
   let centersCount = 0;
   let ownersCount = 0;
@@ -13,27 +34,37 @@ export default async function SecurityDashboardPage() {
   let recentBlacklist: any[] = [];
   let errorMessage = "";
 
-  try {
-    const [placesRes, centersRes, ownersRes, blacklistRes, documentsRes] = await Promise.all([
-      api.get('/office_security/places/'),
-      api.get('/office_security/center/'),
-      api.get('/office_security/onwer/'),
-      api.get('/office_security/blacklist/'),
-      api.get('/office_security/documents/')
-    ]);
+  const promises = [];
 
-    if (placesRes.data?.success) placesCount = placesRes.data.data.count || 0;
-    if (centersRes.data?.success) centersCount = centersRes.data.data.count || 0;
-    if (ownersRes.data?.success) ownersCount = ownersRes.data.data.count || 0;
-    if (blacklistRes.data?.success) {
-      blacklistCount = blacklistRes.data.data.count || 0;
-      recentBlacklist = blacklistRes.data.data.results?.slice(0, 5) || [];
+  try {
+    if (hasPermission('view_place')) {
+      promises.push(api.get('/office_security/places/').then(res => { if(res.data?.success) placesCount = res.data.data.count || 0; }).catch(() => {}));
     }
-    if (documentsRes.data?.success) documentsCount = documentsRes.data.data.count || 0;
+    if (hasPermission('view_center')) {
+      promises.push(api.get('/office_security/center/').then(res => { if(res.data?.success) centersCount = res.data.data.count || 0; }).catch(() => {}));
+    }
+    if (hasPermission('view_onwer')) {
+      promises.push(api.get('/office_security/onwer/').then(res => { if(res.data?.success) ownersCount = res.data.data.count || 0; }).catch(() => {}));
+    }
+    if (hasPermission('view_blacklist')) {
+      promises.push(api.get('/office_security/blacklist/').then(res => { 
+        if(res.data?.success) {
+          blacklistCount = res.data.data.count || 0;
+          recentBlacklist = res.data.data.results?.slice(0, 5) || [];
+        }
+      }).catch(() => {}));
+    }
+    if (hasPermission('view_documents')) {
+      promises.push(api.get('/office_security/documents/').then(res => { if(res.data?.success) documentsCount = res.data.data.count || 0; }).catch(() => {}));
+    }
+
+    await Promise.all(promises);
   } catch (error: any) {
     console.error("Error fetching security dashboard data:", error);
     errorMessage = "فشل في جلب الإحصائيات من الخادم";
   }
+
+  const showShortcuts = hasPermission('add_center') || hasPermission('add_place') || hasPermission('view_blacklist') || hasPermission('view_documents');
 
   return (
     <div className="space-y-6">
@@ -44,14 +75,18 @@ export default async function SecurityDashboardPage() {
           <p className="text-gray-500 text-sm">مزامنة البيانات الحية من الخادم</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <Link href="/dashboard/security/blacklist/add" className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-            إضافة للقائمة السوداء
-            <TriangleAlert className="w-4 h-4 ml-2 text-danger" />
-          </Link>
-          <Link href="/dashboard/security/centers/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
-            إضافة مركز جديد
-            <Plus className="w-4 h-4 ml-2" />
-          </Link>
+          {hasPermission('add_blacklist') && (
+            <Link href="/dashboard/security/blacklist/add" className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
+              إضافة للقائمة السوداء
+              <TriangleAlert className="w-4 h-4 ml-2 text-danger" />
+            </Link>
+          )}
+          {hasPermission('add_center') && (
+            <Link href="/dashboard/security/centers/add" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center">
+              إضافة مركز جديد
+              <Plus className="w-4 h-4 ml-2" />
+            </Link>
+          )}
         </div>
       </div>
 
@@ -64,51 +99,65 @@ export default async function SecurityDashboardPage() {
 
       {/* Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-            <MapPin className="w-5 h-5 text-blue-500" />
+        {hasPermission('view_place') && (
+          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+              <MapPin className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="text-gray-500 text-xs mb-1">الأماكن</h3>
+              <span className="text-2xl font-bold text-gray-900">{placesCount}</span>
+            </div>
           </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">الأماكن</h3>
-            <span className="text-2xl font-bold text-gray-900">{placesCount}</span>
+        )}
+        
+        {hasPermission('view_center') && (
+          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+              <Building className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="text-gray-500 text-xs mb-1">المراكز</h3>
+              <span className="text-2xl font-bold text-gray-900">{centersCount}</span>
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-            <Building className="w-5 h-5 text-blue-500" />
+        )}
+        
+        {hasPermission('view_onwer') && (
+          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
+            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-success" />
+            </div>
+            <div>
+              <h3 className="text-gray-500 text-xs mb-1">الملاك</h3>
+              <span className="text-2xl font-bold text-gray-900">{ownersCount}</span>
+            </div>
           </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">المراكز</h3>
-            <span className="text-2xl font-bold text-gray-900">{centersCount}</span>
+        )}
+        
+        {hasPermission('view_blacklist') && (
+          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
+            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5 text-danger" />
+            </div>
+            <div>
+              <h3 className="text-gray-500 text-xs mb-1">القائمة السوداء</h3>
+              <span className="text-2xl font-bold text-gray-900">{blacklistCount}</span>
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-success" />
+        )}
+
+        {hasPermission('view_documents') && (
+          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
+            <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <h3 className="text-gray-500 text-xs mb-1">المستندات</h3>
+              <span className="text-2xl font-bold text-gray-900">{documentsCount}</span>
+            </div>
           </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">الملاك</h3>
-            <span className="text-2xl font-bold text-gray-900">{ownersCount}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
-            <ShieldAlert className="w-5 h-5 text-danger" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">القائمة السوداء</h3>
-            <span className="text-2xl font-bold text-gray-900">{blacklistCount}</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex justify-between items-center text-right flex-row-reverse">
-          <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-            <FileText className="w-5 h-5 text-orange-500" />
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-xs mb-1">المستندات</h3>
-            <span className="text-2xl font-bold text-gray-900">{documentsCount}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Main Content Area */}
@@ -116,27 +165,37 @@ export default async function SecurityDashboardPage() {
         {/* Right Column - Widgets */}
         <div className="w-full lg:w-80 flex flex-col gap-6 shrink-0 order-2 lg:order-1">
           {/* Quick Shortcuts */}
-          <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm text-right">
-            <h3 className="font-bold text-gray-800 mb-4">اختصارات سريعة</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Link href="/dashboard/security/centers/add" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
-                <Building className="w-5 h-5 text-gray-600" />
-                <span className="text-xs font-bold text-gray-700">إضافة مركز</span>
-              </Link>
-              <Link href="/dashboard/security/places/add" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
-                <MapPin className="w-5 h-5 text-gray-600" />
-                <span className="text-xs font-bold text-gray-700">إضافة مكان</span>
-              </Link>
-              <Link href="/dashboard/security/blacklist" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
-                <ShieldAlert className="w-5 h-5 text-gray-600" />
-                <span className="text-xs font-bold text-gray-700">القائمة السوداء</span>
-              </Link>
-              <Link href="/dashboard/security/documents" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
-                <FileText className="w-5 h-5 text-gray-600" />
-                <span className="text-xs font-bold text-gray-700">المستندات</span>
-              </Link>
+          {showShortcuts && (
+            <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm text-right">
+              <h3 className="font-bold text-gray-800 mb-4">اختصارات سريعة</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {hasPermission('add_center') && (
+                  <Link href="/dashboard/security/centers/add" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
+                    <Building className="w-5 h-5 text-gray-600" />
+                    <span className="text-xs font-bold text-gray-700">إضافة مركز</span>
+                  </Link>
+                )}
+                {hasPermission('add_place') && (
+                  <Link href="/dashboard/security/places/add" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
+                    <MapPin className="w-5 h-5 text-gray-600" />
+                    <span className="text-xs font-bold text-gray-700">إضافة مكان</span>
+                  </Link>
+                )}
+                {hasPermission('view_blacklist') && (
+                  <Link href="/dashboard/security/blacklist" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
+                    <ShieldAlert className="w-5 h-5 text-gray-600" />
+                    <span className="text-xs font-bold text-gray-700">القائمة السوداء</span>
+                  </Link>
+                )}
+                {hasPermission('view_documents') && (
+                  <Link href="/dashboard/security/documents" className="bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-3 flex flex-col items-center justify-center gap-2 transition-colors">
+                    <FileText className="w-5 h-5 text-gray-600" />
+                    <span className="text-xs font-bold text-gray-700">المستندات</span>
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* System Status Dark Card */}
           <div className="bg-[#0f172a] rounded-lg border border-gray-800 shadow-md p-6 text-white text-right relative overflow-hidden">
@@ -156,23 +215,25 @@ export default async function SecurityDashboardPage() {
           </div>
 
           {/* Recent Blacklist Entries */}
-          <div className="bg-white rounded-lg border border-gray-100 shadow-sm text-right overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-              <Link href="/dashboard/security/blacklist" className="text-blue-600 text-xs font-bold hover:underline">عرض الكل</Link>
-              <h3 className="font-bold text-gray-800">آخر سجلات القائمة السوداء</h3>
+          {hasPermission('view_blacklist') && (
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm text-right overflow-hidden">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                <Link href="/dashboard/security/blacklist" className="text-blue-600 text-xs font-bold hover:underline">عرض الكل</Link>
+                <h3 className="font-bold text-gray-800">آخر سجلات القائمة السوداء</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {recentBlacklist.map(item => (
+                  <div key={item.id} className="bg-red-50 border border-red-100 rounded-lg p-3 text-right">
+                    <div className="font-bold text-gray-800 text-sm">{item.name}</div>
+                    <div className="text-xs text-danger mt-1">{item.reason || "بدون سبب"}</div>
+                  </div>
+                ))}
+                {recentBlacklist.length === 0 && (
+                  <div className="text-center text-sm text-gray-500 py-4">لا توجد سجلات حالياً</div>
+                )}
+              </div>
             </div>
-            <div className="p-4 space-y-3">
-              {recentBlacklist.map(item => (
-                <div key={item.id} className="bg-red-50 border border-red-100 rounded-lg p-3 text-right">
-                  <div className="font-bold text-gray-800 text-sm">{item.name}</div>
-                  <div className="text-xs text-danger mt-1">{item.reason || "بدون سبب"}</div>
-                </div>
-              ))}
-              {recentBlacklist.length === 0 && (
-                <div className="text-center text-sm text-gray-500 py-4">لا توجد سجلات حالياً</div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Left Column - Map Area */}
@@ -197,25 +258,29 @@ export default async function SecurityDashboardPage() {
               <h4 className="font-bold text-gray-800 mb-4">حالة المراكز الحالية</h4>
               
               <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-1 text-xs font-bold">
-                    <span className="text-success">{centersCount} مركز</span>
-                    <span className="text-gray-600">المراكز المسجلة</span>
+                {hasPermission('view_center') && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1 text-xs font-bold">
+                      <span className="text-success">{centersCount} مركز</span>
+                      <span className="text-gray-600">المراكز المسجلة</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-success rounded-full" style={{ width: centersCount > 0 ? '100%' : '0%' }}></div>
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-success rounded-full" style={{ width: centersCount > 0 ? '100%' : '0%' }}></div>
-                  </div>
-                </div>
+                )}
                 
-                <div>
-                  <div className="flex justify-between items-center mb-1 text-xs font-bold">
-                    <span className="text-primary">{placesCount} مكان</span>
-                    <span className="text-gray-600">الأماكن المغطاة</span>
+                {hasPermission('view_place') && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1 text-xs font-bold">
+                      <span className="text-primary">{placesCount} مكان</span>
+                      <span className="text-gray-600">الأماكن المغطاة</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: placesCount > 0 ? '100%' : '0%' }}></div>
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: placesCount > 0 ? '100%' : '0%' }}></div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

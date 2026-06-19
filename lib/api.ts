@@ -37,3 +37,19 @@ api.interceptors.request.use(async (config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+
+// Response interceptor to handle 401s
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        // If we get a 401 on the client, clear cookies and redirect to login
+        Cookies.remove('token');
+        Cookies.remove('user_data');
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);

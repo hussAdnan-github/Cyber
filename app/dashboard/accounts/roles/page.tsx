@@ -1,10 +1,56 @@
-import { Trash2, Edit, Eye, Shield, Users } from "lucide-react";
+import { Shield, Users, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
+import RoleActions from "@/components/accounts/RoleActions";
+import { api } from "@/lib/api";
 
-export default function RolesPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function RolesPage() {
+  let roles: any[] = [];
+  let errorMessage = "";
+  let totalRoles = 0;
+  let totalUsers = 0;
+
+  try {
+    const results = await Promise.allSettled([
+      api.get('/group/'),
+      api.get('/users/')
+    ]);
+
+    // Handle groups
+    if (results[0].status === 'fulfilled') {
+      const response = results[0].value;
+      if (response.data?.success || response.data?.data) {
+        roles = response.data.data?.results || response.data.data || response.data || [];
+        totalRoles = response.data.data?.count || roles.length;
+      } else if (Array.isArray(response.data)) {
+        roles = response.data;
+        totalRoles = roles.length;
+      }
+    } else {
+      console.error("Failed to fetch roles:", results[0].reason);
+      errorMessage = "حدث خطأ أثناء جلب الأدوار";
+    }
+
+    // Handle users
+    if (results[1].status === 'fulfilled') {
+      const response = results[1].value;
+      if (response.data?.success || response.data?.data) {
+        totalUsers = response.data.data?.count || response.data.data?.results?.length || 0;
+      } else if (Array.isArray(response.data)) {
+        totalUsers = response.data.length;
+      }
+    } else {
+      console.error("Failed to fetch users:", results[1].reason);
+    }
+  } catch (error: any) {
+    console.error("Unexpected error:", error);
+    errorMessage = error?.message || "حدث خطأ غير متوقع";
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -21,15 +67,22 @@ export default function RolesPage() {
         }
       />
 
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          <p className="text-sm font-bold">{errorMessage}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard 
           title="إجمالي المستخدمين"
-          value="7"
+          value={totalUsers.toString()}
           icon={<Users className="w-5 h-5 text-blue-500" />}
         />
         <StatCard 
           title="الأدوار المسجلة"
-          value="2"
+          value={totalRoles.toString()}
           icon={<Shield className="w-5 h-5 text-emerald-500" />}
           iconBgClassName="bg-green-50"
         />
@@ -44,38 +97,30 @@ export default function RolesPage() {
             <thead>
               <tr className="border-b border-gray-100 text-sm text-gray-500">
                 <th className="py-4 px-6 font-medium w-1/3">اسم الدور</th>
-                <th className="py-4 px-6 font-medium text-center w-1/3">المستخدمون</th>
+                <th className="py-4 px-6 font-medium text-center w-1/3">الصلاحيات الممنوحة</th>
                 <th className="py-4 px-6 font-medium text-left w-1/3">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
-              {[
-                { id: 1, name: "انشاء مستخدم", subtitle: "دور مخصص", users: 1 },
-                { id: 2, name: "مدير فندق", subtitle: "دور مخصص", users: 1 },
-              ].map((role, i) => (
-                <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+              {roles.map((role, i) => (
+                <tr key={role.id || i} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="py-4 px-6">
                     <div className="font-bold text-gray-800">{role.name}</div>
-                    <div className="text-xs text-gray-400 mt-1">{role.subtitle}</div>
+                    <div className="text-xs text-gray-400 mt-1">دور مخصص</div>
                   </td>
                   <td className="py-4 px-6 text-center">
-                    <span className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full text-xs font-bold border border-gray-200">{role.users}</span>
+                    <span className="bg-gray-100 text-gray-600 px-4 py-1 rounded-full text-xs font-bold border border-gray-200">
+                      {role.permissions?.length || 0} صلاحية
+                    </span>
                   </td>
                   <td className="py-4 px-6 text-left">
-                    <div className="flex gap-2 justify-end">
-                      <Link href={`/dashboard/accounts/roles/details/${role.id}`} className="p-2 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                      <Link href={`/dashboard/accounts/roles/edit/${role.id}`} className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </Link>
-                      <button className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <RoleActions roleId={role.id} />
                   </td>
                 </tr>
               ))}
+              {roles.length === 0 && !errorMessage && (
+                <EmptyState message="لا توجد أدوار لعرضها" colSpan={3} />
+              )}
             </tbody>
           </table>
         </div>
