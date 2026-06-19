@@ -50,12 +50,13 @@ export default async function UsersPage(props: { searchParams: Promise<{ [key: s
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="المستخدمون"
+        title="المستخدمون" 
         description="إدارة حسابات المستخدمين"
         breadcrumbs={[{ label: "الحسابات", href: "/dashboard/accounts" }, { label: "المستخدمين", active: true }]}
         addLink="/dashboard/accounts/users/add"
         addLabel="إضافة مستخدم جديد"
         addButtonIcon={<UserPlus className="w-5 h-5 ml-2" />}
+        can="add_user"
       />
 
       {errorMessage && (

@@ -45,14 +45,7 @@ export default async function HotelDetailsPage({ params }: PageProps) {
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex gap-2 order-2 md:order-1 mt-4 md:mt-0">
-           <Link href={`/dashboard/hotels/${hotel.id}`} className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center">
-             تعديل البيانات
-           </Link>
-           <Link href="/dashboard/hotels/guests/add" className="bg-success hover:bg-green-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center">
-             إضافة نزيل جديد
-           </Link>
-        </div>
+      
 
         <div className="text-right order-1 md:order-2 ml-auto">
            <h2 className="text-2xl font-bold text-gray-800 mb-1">{hotel.name}</h2>
@@ -166,7 +159,7 @@ export default async function HotelDetailsPage({ params }: PageProps) {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-right">
             <h3 className="font-bold text-gray-800 mb-6">إحصائيات الأداء</h3>
             
-            <div className="mb-6">
+            {/* <div className="mb-6">
                <div className="flex justify-between items-end mb-2">
                   <div className="text-3xl font-bold text-gray-900">--</div>
                   <div className="text-xs text-gray-500">إجمالي النزلاء حالياً</div>
@@ -174,7 +167,7 @@ export default async function HotelDetailsPage({ params }: PageProps) {
                <div className="w-full bg-gray-100 rounded-full h-1.5">
                   <div className="bg-gray-300 h-1.5 rounded-full" style={{ width: '0%' }}></div>
                </div>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-2 gap-4 mb-4">
                <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 text-center">

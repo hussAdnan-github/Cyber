@@ -199,6 +199,7 @@
 import { Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -272,9 +273,11 @@ export default async function HotelsDashboardPage() {
           <Link href="/dashboard/hotels/list" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
             عرض الفنادق
           </Link>
-          <Link href="/dashboard/hotels/new" className="bg-[#111827] hover:bg-gray-800 text-white px-5 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
+        <Can permission="add_hotel">
+            <Link href="/dashboard/hotels/new" className="bg-[#111827] hover:bg-gray-800 text-white px-5 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
             إضافة فندق جديد
           </Link>
+        </Can>
         </div>
       </div>
 

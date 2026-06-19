@@ -65,6 +65,7 @@ export default async function RolesPage() {
             سجل التدقيق
           </button>
         }
+        can="add_permission"
       />
 
       {errorMessage && (

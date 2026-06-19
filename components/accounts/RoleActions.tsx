@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Can from "../auth/Can";
 
 interface RoleActionsProps {
   roleId: number;
@@ -45,22 +46,26 @@ export default function RoleActions({ roleId }: RoleActionsProps) {
         <Eye className="w-4 h-4" />
       </Link>
 
-      <Link
-        href={`/dashboard/accounts/roles/edit/${roleId}`}
-        className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors"
-        title="تعديل"
-      >
-        <Edit className="w-4 h-4" />
-      </Link>
+      <Can permission="change_permission">
+        <Link
+          href={`/dashboard/accounts/roles/edit/${roleId}`}
+          className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors"
+          title="تعديل"
+        >
+          <Edit className="w-4 h-4" />
+        </Link>
+      </Can>
+      <Can permission="delete_permission">
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors disabled:opacity-50"
+          title="حذف"
+        >
+          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+        </button>
+      </Can>
 
-      <button
-        onClick={handleDelete}
-        disabled={isDeleting}
-        className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors disabled:opacity-50"
-        title="حذف"
-      >
-        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-      </button>
     </div>
   );
 }

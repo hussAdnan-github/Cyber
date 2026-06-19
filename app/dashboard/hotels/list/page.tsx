@@ -9,6 +9,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
       api.get('/office_security/places/'),
       api.get('/users/')
     ]);
-    
+
     if (hotelsRes.data && hotelsRes.data.success) {
       hotels = hotelsRes.data.data.results || [];
       totalHotels = hotelsRes.data.data.count || hotels.length;
@@ -47,7 +48,7 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
 
   return (
     <div className="space-y-6">
-      <PageHeader 
+      <PageHeader
         title="قائمة الفنادق"
         description="إدارة جميع الفنادق والمنشآت السياحية المسجلة"
         breadcrumbs={[{ label: "الفنادق", active: true }]}
@@ -55,12 +56,12 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
+        <StatCard
           title="إجمالي الفنادق"
           value={totalHotels}
           icon={<Building2 className="w-5 h-5 text-blue-500" />}
         />
-        <StatCard 
+        <StatCard
           title="الفنادق النشطة"
           value={totalHotels}
           icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
@@ -68,14 +69,14 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
           iconTextClassName="text-emerald-500"
           valueClassName="text-emerald-500"
         />
-        <StatCard 
+        <StatCard
           title="إجمالي النزلاء"
           value="--"
           icon={<Users className="w-5 h-5 text-purple-500" />}
           iconBgClassName="bg-purple-50"
           iconTextClassName="text-purple-500"
         />
-        <StatCard 
+        <StatCard
           title="إجمالي المرافقين"
           value="--"
           icon={<UserCog className="w-5 h-5 text-gray-500" />}
@@ -99,11 +100,12 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
               <HotelFilters places={placesList} users={usersList} />
             </Suspense>
           </div>
-          
-          <Link href="/dashboard/hotels/new" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center shrink-0">
-            إضافة فندق جديد
-            <Plus className="w-4 h-4 ml-2" />
-          </Link>
+          <Can permission="add_hotel">
+            <Link href="/dashboard/hotels/new" className="bg-[#0f172a] hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center shrink-0">
+              إضافة فندق جديد
+              <Plus className="w-4 h-4 ml-2" />
+            </Link>
+          </Can>
         </div>
 
         <div className="overflow-x-auto">
@@ -150,10 +152,14 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
                         <Link href={`/dashboard/hotels/details/${hotel.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                           <Eye className="w-4 h-4" />
                         </Link>
-                        <Link href={`/dashboard/hotels/${hotel.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                        <DeleteButton endpoint="/hotal/hotel/" id={hotel.id} />
+                        <Can permission="change_hotel">
+                          <Link href={`/dashboard/hotels/${hotel.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                        </Can>
+                        <Can permission="delete_hotel">
+                          <DeleteButton endpoint="/hotal/hotel/" id={hotel.id} />
+                        </Can>
                       </div>
                     </td>
                   </tr>
@@ -164,7 +170,7 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
             </tbody>
           </table>
         </div>
-        
+
         <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-gray-50/50">
           <div>إجمالي النتائج: {totalHotels} فندق</div>
         </div>

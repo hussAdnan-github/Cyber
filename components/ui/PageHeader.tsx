@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import React from "react";
+import Can from "../auth/Can";
 
 interface PageHeaderProps {
   title: string;
@@ -11,6 +12,7 @@ interface PageHeaderProps {
   addButtonIcon?: React.ReactNode;
   extraActions?: React.ReactNode;
   breadcrumbs?: { label: string; href?: string; active?: boolean }[];
+  can?: string;
 }
 
 export default function PageHeader({ 
@@ -21,7 +23,8 @@ export default function PageHeader({
   addButtonClassName = "bg-[#0f172a] hover:bg-gray-800 text-white",
   addButtonIcon,
   extraActions,
-  breadcrumbs 
+  breadcrumbs ,
+  can
 }: PageHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -46,10 +49,12 @@ export default function PageHeader({
       <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
         {extraActions}
         {addLink && addLabel && (
+          <Can permission={can}>
           <Link href={addLink} className={`${addButtonClassName} px-5 py-2.5 rounded-lg flex items-center text-sm font-bold transition-colors shadow-sm w-full md:w-auto justify-center`}>
             {addLabel}
             {addButtonIcon ? addButtonIcon : <Plus className="w-4 h-4 ml-2" />}
           </Link>
+          </Can>
         )}
       </div>
     </div>

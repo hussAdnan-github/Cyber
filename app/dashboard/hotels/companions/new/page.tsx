@@ -20,12 +20,12 @@ type CompanionFormData = {
 
 export default function AddCompanionPage() {
   const router = useRouter();
-  
+
   const [guests, setGuests] = useState<any[]>([]);
   const [nationalities, setNationalities] = useState<any[]>([]);
   const [submitError, setSubmitError] = useState("");
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CompanionFormData>();
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<CompanionFormData>();
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -34,16 +34,27 @@ export default function AddCompanionPage() {
           api.get('/hotal/person/'),
           api.get('/office_security/nationality/')
         ]);
-        
+
         if (guestsRes.data?.success) setGuests(guestsRes.data.data.results || []);
         if (nationalitiesRes.data?.success) setNationalities(nationalitiesRes.data.data.results || []);
+
+        if (typeof window !== "undefined") {
+          const urlParams = new URLSearchParams(window.location.search);
+          const personId = urlParams.get("person_id");
+          if (personId) {
+            // setTimeout to ensure React has painted the options before setting the value
+            setTimeout(() => {
+              setValue("person", Number(personId));
+            }, 0);
+          }
+        }
       } catch (error) {
         console.error("Error fetching dropdowns:", error);
       }
     };
-    
+
     fetchDropdowns();
-  }, []);
+  }, [setValue]);
 
   const onSubmit = async (data: CompanionFormData) => {
     setSubmitError("");
@@ -53,7 +64,7 @@ export default function AddCompanionPage() {
       formData.append("number_id", data.number_id);
       formData.append("phone", data.phone || "");
       formData.append("phone2", data.phone2 || "");
-      
+
       if (data.type_id) formData.append("type_id", data.type_id);
       if (data.evaluation) formData.append("evaluation", data.evaluation);
       if (data.person) formData.append("person", String(data.person));
@@ -68,7 +79,7 @@ export default function AddCompanionPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
+
       if (response.data?.success || response.status === 201 || response.status === 200) {
         router.push('/dashboard/hotels/companions');
         router.refresh();
@@ -86,8 +97,8 @@ export default function AddCompanionPage() {
         {/* Header */}
         <div className="flex justify-between items-end mb-6 text-right border-b border-gray-100 pb-4">
           <div>
-             <h2 className="text-2xl font-bold text-gray-800 mb-1">إضافة مرافق جديد</h2>
-             <p className="text-sm text-gray-500">يرجى تعبئة كافة البيانات المطلوبة للمرافق وربطها بالنزيل الأساسي.</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">إضافة مرافق جديد</h2>
+            <p className="text-sm text-gray-500">يرجى تعبئة كافة البيانات المطلوبة للمرافق وربطها بالنزيل الأساسي.</p>
           </div>
         </div>
 
@@ -98,19 +109,19 @@ export default function AddCompanionPage() {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          
+
           <div className="flex-1 space-y-6 order-2 lg:order-1">
             {/* Personal Details */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative">
               <div className="absolute top-6 left-6">
-                 <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-xs font-bold">إلزامي</span>
+                <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-xs font-bold">إلزامي</span>
               </div>
               <h3 className="text-lg font-bold text-gray-800 mb-6 text-right">البيانات الشخصية</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">النزيل الأساسي *</label>
-                  <select 
+                  <select
                     {...register("person", { required: "النزيل الأساسي مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
                     dir="rtl"
@@ -124,18 +135,18 @@ export default function AddCompanionPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">الاسم الكامل *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("name", { required: "الاسم مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400"
                     dir="rtl"
                   />
                   {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                 </div>
-                
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">الجنسية *</label>
-                  <select 
+                  <select
                     {...register("nationality", { required: "الجنسية مطلوبة" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
                     dir="rtl"
@@ -149,8 +160,8 @@ export default function AddCompanionPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">رقم الجوال *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("phone", { required: "رقم الجوال مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400 font-mono"
                     dir="rtl"
@@ -160,8 +171,8 @@ export default function AddCompanionPage() {
 
                 <div className="md:col-start-2">
                   <label className="block text-xs font-bold text-gray-700 mb-2">رقم جوال إضافي</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("phone2")}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400 font-mono"
                     dir="rtl"
@@ -173,12 +184,12 @@ export default function AddCompanionPage() {
             {/* Identity Details */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-bold text-gray-800 mb-6 text-right">بيانات الهوية</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right mb-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">رقم الهوية / الجواز *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     {...register("number_id", { required: "رقم الهوية مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50 placeholder-gray-400"
                     dir="rtl"
@@ -187,7 +198,7 @@ export default function AddCompanionPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">نوع الهوية *</label>
-                  <select 
+                  <select
                     {...register("type_id", { required: "نوع الهوية مطلوب" })}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-right bg-gray-50"
                     dir="rtl"
@@ -204,8 +215,8 @@ export default function AddCompanionPage() {
               <div className="text-right">
                 <label className="block text-xs font-bold text-gray-700 mb-2">رفع صورة الهوية</label>
                 <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-gray-50/50 flex justify-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     {...register("pic")}
                     className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f172a] file:text-white hover:file:bg-gray-800 focus:outline-none cursor-pointer"
                     dir="rtl"
@@ -217,17 +228,17 @@ export default function AddCompanionPage() {
 
           {/* Sidebar Actions Area */}
           <div className="w-full lg:w-72 flex flex-col gap-6 order-1 lg:order-2 shrink-0">
-            
+
             <div className="flex gap-2">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => router.back()}
                 className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm flex-1"
               >
                 إلغاء
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isSubmitting}
                 className="bg-[#0f172a] hover:bg-gray-800 disabled:bg-gray-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm flex-1"
               >
@@ -238,8 +249,8 @@ export default function AddCompanionPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-right">
               <h3 className="font-bold text-gray-800 mb-4">التقييم الأولي</h3>
               <label className="block text-xs font-bold text-gray-700 mb-2">درجة التقييم</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 min="1"
                 max="5"
                 {...register("evaluation")}

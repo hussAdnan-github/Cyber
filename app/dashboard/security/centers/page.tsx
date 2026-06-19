@@ -10,6 +10,7 @@ import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import CentersFilters from "@/components/security/CentersFilters";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
 
@@ -58,12 +59,13 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
 
     return (
         <div className="space-y-6">
-            <PageHeader 
+            <PageHeader
                 title="إدارة المراكز الأمنية"
                 description="عرض وإدارة كافة المراكز المسجلة في النظام وتوزيعها الجغرافي."
                 addLink="/dashboard/security/centers/add"
                 addLabel="إضافة مركز جديد"
                 breadcrumbs={[{ label: "الأمان", href: "/dashboard/security" }, { label: "المراكز الأمنية", active: true }]}
+                can="add_center"
             />
 
             {errorMessage && (
@@ -74,27 +76,27 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard 
+                <StatCard
                     title="إجمالي المراكز"
                     value={totalCenters}
                     icon={<Building className="w-4 h-4 text-blue-500" />}
                     trend={{ value: "+12%", isPositive: true }}
                 />
-                <StatCard 
+                <StatCard
                     title="مراكز نشطة"
                     value={totalCenters}
                     icon={<CheckCircle2 className="w-4 h-4 text-success" />}
                     iconBgClassName="bg-green-50"
                     iconTextClassName="text-success"
                 />
-                <StatCard 
+                <StatCard
                     title="المناطق المغطاة"
                     value="—"
                     icon={<MapPin className="w-4 h-4 text-orange-500" />}
                     iconBgClassName="bg-orange-50"
                     iconTextClassName="text-orange-500"
                 />
-                <StatCard 
+                <StatCard
                     title="تنبيهات أمنية"
                     value="0"
                     icon={<TriangleAlert className="w-4 h-4 text-danger" />}
@@ -149,10 +151,15 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
                                             <Link href={`/dashboard/security/centers/details/${center.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                                                 <Eye className="w-4 h-4" />
                                             </Link>
-                                            <Link href={`/dashboard/security/centers/${center.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
-                                                <Edit className="w-4 h-4" />
-                                            </Link>
-                                            <DeleteButton endpoint="/office_security/center/" id={center.id} />
+                                            <Can permission="change_center">
+                                                <Link href={`/dashboard/security/centers/${center.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                                                    <Edit className="w-4 h-4" />
+                                                </Link>
+                                            </Can>
+                                            <Can permission="delete_center">
+                                                <DeleteButton endpoint="/office_security/center/" id={center.id} />
+
+                                            </Can>
                                         </div>
                                     </td>
                                 </tr>

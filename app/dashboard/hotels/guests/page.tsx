@@ -1,84 +1,62 @@
-import { Eye, AlertCircle } from "lucide-react";
+import { Search, Filter, ShieldAlert, CheckCircle, Users, Zap, Eye, Edit, AlertCircle, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { ApiResponse } from "@/types/api";
+import {Guest} from "@/types/hotel";
+import DeleteButton from "@/components/DeleteButton";
+import GuestFilters from "@/components/GuestFilters";
+import PageHeader from "@/components/ui/PageHeader";
+import StatCard from "@/components/ui/StatCard";
+import EmptyState from "@/components/ui/EmptyState";
+import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
+ 
+export default async function GuestsPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
+  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
+  const hotel = typeof searchParams.hotel === 'string' ? searchParams.hotel : undefined;
+  const type_id = typeof searchParams.type_id === 'string' ? searchParams.type_id : undefined;
+  const nationality = typeof searchParams.nationality === 'string' ? searchParams.nationality : undefined;
 
-export default async function HotelsDashboardPage() {
-  let hotelsCount = 0;
-  let guestsCount = 0;
-  let companionsCount = 0;
-  let recentGuests: any[] = [];
-  let recentCompanions: any[] = [];
+  let guests: Guest[] = [];
   let errorMessage = "";
+  let totalGuests = 0;
+  let hotelsList: any[] = [];
+  let nationalitiesList: any[] = [];
 
   try {
-    // تم استخدام Promise.allSettled بدلاً من Promise.all
-    // لضمان أنه لو فشل طلب واحد، لا تنهار الصفحة بالكامل وتجلب بقية البيانات المتاحة
-    const results = await Promise.allSettled([
+    const [guestsRes, hotelsRes, nationalitiesRes] = await Promise.all([
+      api.get<ApiResponse<Guest>>("/hotal/person/", { params: { search, hotel, type_id, nationality } }),
       api.get('/hotal/hotel/'),
-      api.get('/hotal/person/'),
-      api.get('/hotal/companions/')
+      api.get('/office_security/nationality/')
     ]);
 
-    // 1. معالجة بيانات الفنادق
-    if (results[0].status === 'fulfilled') {
-      const hotelsRes = results[0].value;
-      if (hotelsRes.data?.success) {
-        hotelsCount = hotelsRes.data.data?.count || 0;
-      }
+    if (guestsRes.data && guestsRes.data.success) {
+      guests = guestsRes.data.data.results || [];
+      totalGuests = guestsRes.data.data.count || guests.length;
     } else {
-      console.error("فشل جلب بيانات الفنادق:", results[0].reason);
+      errorMessage = guestsRes.data?.message || "فشل في جلب البيانات من الخادم";
     }
 
-    // 2. معالجة بيانات النزلاء
-    if (results[1].status === 'fulfilled') {
-      const guestsRes = results[1].value;
-      if (guestsRes.data?.success) {
-        guestsCount = guestsRes.data.data?.count || 0;
-        recentGuests = guestsRes.data.data?.results?.slice(0, 5) || [];
-      }
-    } else {
-      console.error("فشل جلب بيانات النزلاء:", results[1].reason);
-    }
-
-    // 3. معالجة بيانات المرافقين
-    if (results[2].status === 'fulfilled') {
-      const companionsRes = results[2].value;
-      if (companionsRes.data?.success) {
-        companionsCount = companionsRes.data.data?.count || 0;
-        recentCompanions = companionsRes.data.data?.results?.slice(0, 5) || [];
-      }
-    } else {
-      console.error("فشل جلب بيانات المرافقين:", results[2].reason);
-    }
-
-    // إذا فشلت جميع الطلبات نُظهر رسالة خطأ للمستخدم
-    if (results.every(r => r.status === 'rejected')) {
-      errorMessage = "فشل في جلب الإحصائيات من الخادم";
-    }
-
+    if (hotelsRes.data?.success) hotelsList = hotelsRes.data.data.results || [];
+    if (nationalitiesRes.data?.success) nationalitiesList = nationalitiesRes.data.data.results || [];
   } catch (error: any) {
-    console.error("Error fetching hotel dashboard data:", error);
-    errorMessage = "حدث خطأ غير متوقع أثناء الاتصال بالخادم";
+    errorMessage = error.response?.data?.message || error.message || "حدث خطأ غير متوقع أثناء الاتصال بالخادم";
+    console.error("Error fetching guests:", error);
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start mb-6">
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">نظرة عامة على نظام الفنادق</h2>
-          <p className="text-gray-500 text-sm">مزامنة البيانات الحية من الخادم</p>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/dashboard/hotels/list" className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
-            عرض الفنادق
-          </Link>
-          <Link href="/dashboard/hotels/new" className="bg-[#111827] hover:bg-gray-800 text-white px-5 py-2 rounded-md flex items-center text-sm font-bold transition-colors shadow-sm">
-            إضافة فندق جديد
-          </Link>
-        </div>
-      </div>
+      <PageHeader 
+        title="إدارة النزلاء"
+        description="تتبع وإدارة بيانات النزلاء المسجلين في المنشآت الفندقية."
+        breadcrumbs={[{ label: "الفنادق", href: "/dashboard/hotels" }, { label: "النزلاء", active: true }]}
+        addLink="/dashboard/hotels/guests/new"
+        addLabel="إضافة نزيل جديد"
+        can="add_person"
+      />
 
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-bold flex items-center gap-2 justify-end">
@@ -87,135 +65,120 @@ export default async function HotelsDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي الفنادق</h3>
-          <span className="text-3xl font-bold text-gray-900">{hotelsCount}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي النزلاء</h3>
-          <span className="text-3xl font-bold text-gray-900">{guestsCount}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">إجمالي المرافقين</h3>
-          <span className="text-3xl font-bold text-gray-900">{companionsCount}</span>
-        </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 border-r-4 border-r-warning flex flex-col items-end justify-center">
-          <h3 className="text-gray-500 text-xs mb-2 text-right">نزلاء بتقييم سيئ</h3>
-          <span className="text-3xl font-bold text-gray-900">0</span>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="إجمالي النزلاء"
+          value={totalGuests}
+          icon={<Users className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard 
+          title="نشط حالياً"
+          value={totalGuests}
+          icon={<Zap className="w-5 h-5 text-emerald-500" />}
+          iconBgClassName="bg-green-50"
+          valueClassName="text-emerald-500"
+        />
+        <StatCard 
+          title="تقييمات ممتازة"
+          value="0"
+          icon={<CheckCircle className="w-5 h-5 text-yellow-500" />}
+          iconBgClassName="bg-yellow-50"
+        />
+        <StatCard 
+          title="تنبيهات"
+          value="0"
+          icon={<ShieldAlert className="w-5 h-5 text-red-500" />}
+          iconBgClassName="bg-red-50"
+          valueClassName="text-red-500"
+        />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 mt-6">
-        {/* Right Column - Tables */}
-        <div className="flex-1 space-y-6 order-2 lg:order-1">
-          {/* Recent Guests */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <Link href="/dashboard/hotels/guests" className="text-blue-600 text-sm font-bold hover:underline">عرض الكل</Link>
-              <h3 className="font-bold text-gray-800">آخر النزلاء المسجلين</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right">
-                <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-500">
-                    <th className="py-3 px-4 font-medium">النزيل</th>
-                    <th className="py-3 px-4 font-medium text-center">رقم الهوية</th>
-                    <th className="py-3 px-4 font-medium text-center">الفندق</th>
-                    <th className="py-3 px-4 font-medium text-left">التقييم</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentGuests.map(guest => (
-                    <tr key={guest.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-4 font-bold text-gray-800 text-sm">{guest.name}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{guest.number_id}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{guest.name_hotel || "-"}</td>
-                      <td className="py-4 px-4 text-left">
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
-                          {guest.evaluation ? `${guest.evaluation} نجوم` : "بدون"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {recentGuests.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500 text-sm">لا يوجد نزلاء</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Recent Companions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <Link href="/dashboard/hotels/companions" className="text-blue-600 text-sm font-bold hover:underline">عرض الكل</Link>
-              <h3 className="font-bold text-gray-800">آخر المرافقين المسجلين</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-right">
-                <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-500">
-                    <th className="py-3 px-4 font-medium">المرافق</th>
-                    <th className="py-3 px-4 font-medium text-center">النزيل المرتبط</th>
-                    <th className="py-3 px-4 font-medium text-center">رقم الهوية</th>
-                    <th className="py-3 px-4 font-medium text-left">التقييم</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentCompanions.map(comp => (
-                    <tr key={comp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-4 font-bold text-gray-800 text-sm">{comp.name}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{comp.name_person || "-"}</td>
-                      <td className="py-4 px-4 text-center text-sm text-gray-600">{comp.number_id}</td>
-                      <td className="py-4 px-4 text-left">
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
-                          {comp.evaluation ? `${comp.evaluation} نجوم` : "بدون"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {recentCompanions.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500 text-sm">لا يوجد مرافقين</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {/* Table Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
+        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
+          <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg w-full"></div>}>
+            <GuestFilters hotels={hotelsList} nationalities={nationalitiesList} />
+          </Suspense>
         </div>
 
-        {/* Left Column - Alerts & Status */}
-        <div className="w-full lg:w-80 flex flex-col gap-6 order-1 lg:order-2 shrink-0">
-          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-            <div className="bg-red-50 p-4 border-b border-red-100 flex justify-between items-center">
-               <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-               <h3 className="text-red-500 font-bold">تنبيهات أمنية</h3>
-            </div>
-            <div className="p-6 text-center text-sm text-gray-500 bg-gray-50/30">
-              لا توجد تنبيهات حالية.
-            </div>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-right">
+            <thead>
+              <tr className="border-b border-gray-100 text-xs text-gray-500 bg-gray-50/50">
+                <th className="py-4 px-6 font-medium text-center">صورة الهوية</th>
+                <th className="py-4 px-6 font-medium">الاسم الكامل</th>
+                <th className="py-4 px-6 font-medium text-center">الفندق المرتبط</th>
+                <th className="py-4 px-6 font-medium text-center">الجنسية</th>
+                <th className="py-4 px-6 font-medium text-center">رقم الهوية</th>
+                <th className="py-4 px-6 font-medium text-center">التقييم</th>
+                <th className="py-4 px-6 font-medium text-center">الحالة</th>
+                <th className="py-4 px-6 font-medium text-left">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {guests.length > 0 ? (
+                guests.map((guest) => (
+                  <tr key={guest.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="py-4 px-6 text-center">
+                      <div className="w-10 h-10 bg-gray-100 rounded-md border border-gray-200 mx-auto flex items-center justify-center overflow-hidden">
+                        {guest.pic ? (
+                          <img src={guest.pic} alt={guest.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xs text-gray-400">صورة</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="font-bold text-gray-800 text-sm">{guest.name}</div>
+                      <div className="text-[10px] text-gray-400">
+                        {guest.updated_at ? `تم التحديث: ${new Date(guest.updated_at).toLocaleDateString('ar-SA')}` : ''}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-center text-sm text-gray-600">{guest.name_hotel || "-"}</td>
+                    <td className="py-4 px-6 text-center text-sm text-gray-600">{guest.name_nationality || "-"}</td>
+                    <td className="py-4 px-6 text-center text-sm text-gray-600">{guest.number_id}</td>
+                    <td className="py-4 px-6 text-center">
+                      <span className="text-gray-600 text-xs font-bold">
+                        {guest.evaluation ? `${guest.evaluation} نجوم` : "بدون تقييم"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100">نشط</span>
+                    </td>
+                    <td className="py-4 px-6 text-left">
+                      <div className="flex gap-2 justify-end">
+                       
+                        <Can permission="add_companions">
+                          <Link href={`/dashboard/hotels/companions/new?person_id=${guest.id}`} title="إضافة مرافق" className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md border border-emerald-100 transition-colors">
+                            <UserPlus className="w-4 h-4" />
+                          </Link>
+                        </Can>
 
-          <div className="bg-[#111827] rounded-lg border border-gray-800 overflow-hidden shadow-md text-white p-6 relative">
-            <h3 className="font-bold text-lg mb-6 text-right">حالة النظام <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span></h3>
-            
-            <div className="space-y-4 text-right">
-              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <span className="text-green-500 text-sm font-bold">مستقر</span>
-                <span className="text-gray-400 text-sm">اتصال قواعد البيانات</span>
-              </div>
-              
-              <div className="pt-6">
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full w-[100%]"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+                        <Link href={`/dashboard/hotels/guests/details/${guest.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                       
+                        <Can permission="change_person">
+                        <Link href={`/dashboard/hotels/guests/${guest.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                        </Can>
+                        <Can permission="delete_person">
+                        <DeleteButton endpoint="/hotal/person/" id={guest.id} />
+                        </Can>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <EmptyState message="لا يوجد نزلاء مسجلين حالياً" colSpan={8} />
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-gray-50/50">
+          <div>عرض {totalGuests} نزيل</div>
         </div>
       </div>
     </div>

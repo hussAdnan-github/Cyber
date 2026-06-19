@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Can from "../auth/Can";
 
 interface UserActionsProps {
   userId: number;
@@ -37,6 +38,7 @@ export default function UserActions({ userId }: UserActionsProps) {
 
   return (
     <div className="flex gap-2 justify-end">
+
       <Link
         href={`/dashboard/accounts/users/details/${userId}`}
         className="p-2 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors"
@@ -44,23 +46,27 @@ export default function UserActions({ userId }: UserActionsProps) {
       >
         <Eye className="w-4 h-4" />
       </Link>
+      <Can permission="change_user">
+        <Link
+          href={`/dashboard/accounts/users/edit/${userId}`}
+          className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors"
+          title="تعديل"
+        >
+          <Edit className="w-4 h-4" />
+        </Link>
+      </Can>
+      <Can permission="delete_user">
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors disabled:opacity-50"
+          title="حذف"
+        >
+          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+        </button>
+        </Can>
+        
 
-      <Link
-        href={`/dashboard/accounts/users/edit/${userId}`}
-        className="p-2 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors"
-        title="تعديل"
-      >
-        <Edit className="w-4 h-4" />
-      </Link>
-
-      <button
-        onClick={handleDelete}
-        disabled={isDeleting}
-        className="p-2 text-red-600 hover:bg-red-50 rounded-md border border-red-100 transition-colors disabled:opacity-50"
-        title="حذف"
-      >
-        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-      </button>
     </div>
   );
 }

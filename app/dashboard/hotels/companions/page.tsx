@@ -9,6 +9,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import EmptyState from "@/components/ui/EmptyState";
 import { Suspense } from "react";
+import Can from "@/components/auth/Can";
 
 export const dynamic = 'force-dynamic';
  
@@ -54,6 +55,7 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
         breadcrumbs={[{ label: "الفنادق", href: "/dashboard/hotels" }, { label: "المرافقين", active: true }]}
         addLink="/dashboard/hotels/companions/new"
         addLabel="إضافة مرافق جديد"
+        can = "add_companions"
       />
 
       {errorMessage && (
@@ -145,13 +147,19 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
                     </td>
                     <td className="py-4 px-6 text-left">
                       <div className="flex gap-2 justify-end">
+                       
                         <Link href={`/dashboard/hotels/companions/details/${comp.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-100 transition-colors">
                           <Eye className="w-4 h-4" />
                         </Link>
+                       
+                        <Can permission="change_companions">
                         <Link href={`/dashboard/hotels/companions/${comp.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
                           <Edit className="w-4 h-4" />
                         </Link>
+                        </Can>
+                        <Can permission="delete_companions">
                         <DeleteButton endpoint="/hotal/companions/" id={comp.id} />
+                        </Can>
                       </div>
                     </td>
                   </tr>
