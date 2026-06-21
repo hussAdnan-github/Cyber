@@ -159,7 +159,7 @@ export default async function TripsPage(props: { searchParams: Promise<{ [key: s
                         </Link>
                       </Can>
                       <Can permission="delete_trip">
-                        <DeleteButton endpoint="/office_travel/trip/" id={trip.id} />
+                        <DeleteButton endpoint="/office_travel/trip/" id={trip.id} permission="delete_trip" />
                       </Can>
                     </div>
                   </td>
@@ -182,3 +182,4 @@ export default async function TripsPage(props: { searchParams: Promise<{ [key: s
     </div>
   );
 }
+

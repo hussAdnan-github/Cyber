@@ -45,7 +45,7 @@ export default function EditNationalityPage() {
   const onSubmit = async (data: NationalityFormData) => {
     setSubmitError("");
     try {
-      const response = await api.put(`/office_security/nationality/${id}/`, data);
+      const response = await api.patch(`/office_security/nationality/${id}/`, data);
       
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.push('/dashboard/security/nationalities');

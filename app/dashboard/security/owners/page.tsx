@@ -122,7 +122,7 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
                                                 </Link>
                                             </Can>
                                             <Can permission="delete_onwer">
-                                                <DeleteButton endpoint="/office_security/onwer/" id={item.id} />
+                                                <DeleteButton endpoint="/office_security/onwer/" id={item.id} permission="delete_onwer" />
                                             </Can>
                                         </div>
                                     </td>
@@ -164,3 +164,4 @@ export default async function OwnersPage({ searchParams }: { searchParams: Promi
         </div>
     );
 }
+

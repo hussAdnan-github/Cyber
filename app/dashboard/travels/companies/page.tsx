@@ -121,7 +121,7 @@ export default async function CompaniesPage(props: { searchParams: Promise<{ [ke
                         </Link>
                       </Can>
                       <Can permission="delete_travel">
-                        <DeleteButton endpoint="/office_travel/travel/" id={company.id} />
+                        <DeleteButton endpoint="/office_travel/travel/" id={company.id} permission="delete_travel" />
                       </Can>
                     </div>
                   </td>
@@ -160,3 +160,4 @@ export default async function CompaniesPage(props: { searchParams: Promise<{ [ke
     </div>
   );
 }
+

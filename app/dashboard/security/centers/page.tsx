@@ -157,7 +157,7 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
                                                 </Link>
                                             </Can>
                                             <Can permission="delete_center">
-                                                <DeleteButton endpoint="/office_security/center/" id={center.id} />
+                                                <DeleteButton endpoint="/office_security/center/" id={center.id} permission="delete_center" />
 
                                             </Can>
                                         </div>
@@ -181,3 +181,4 @@ export default async function CentersPage({ searchParams }: { searchParams: Prom
         </div>
     );
 }
+

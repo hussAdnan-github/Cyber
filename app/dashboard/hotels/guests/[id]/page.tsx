@@ -91,7 +91,7 @@ export default function EditGuestPage() {
         formData.append("pic", data.pic[0]);
       }
 
-      const response = await api.put(`/hotal/person/${id}/`, formData, {
+      const response = await api.patch(`/hotal/person/${id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

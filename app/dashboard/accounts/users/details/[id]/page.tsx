@@ -1,6 +1,7 @@
 import { AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { translateField } from "@/lib/translations";
 
 export const dynamic = 'force-dynamic';
 
@@ -72,14 +73,40 @@ export default async function DetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right mb-8">
            {Object.entries(data).filter(([k,v]) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean').map(([key, value]) => (
              <div key={key} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-100">
                 <div className="font-bold text-gray-800 break-all w-2/3">{String(value)}</div>
-                <div className="text-xs text-gray-500 w-1/3">{key}</div>
+                <div className="text-xs text-gray-500 w-1/3">{translateField(key)}</div>
              </div>
            ))}
         </div>
+
+        {Array.isArray(data.groups) && data.groups.length > 0 && (
+          <div className="mb-6 text-right">
+             <h4 className="font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">الأدوار (Groups)</h4>
+             <div className="flex flex-wrap gap-2 justify-end">
+               {data.groups.map((g: any, index: number) => (
+                 <span key={g.id || index} className="px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-lg text-sm font-bold">
+                    {g.name || g.id || g}
+                 </span>
+               ))}
+             </div>
+          </div>
+        )}
+
+        {Array.isArray(data.user_permissions) && data.user_permissions.length > 0 && (
+          <div className="mb-6 text-right">
+             <h4 className="font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">الصلاحيات (Permissions)</h4>
+             <div className="flex flex-wrap gap-2 justify-end">
+               {data.user_permissions.map((p: any, index: number) => (
+                 <span key={p.id || index} className="px-3 py-1.5 bg-purple-50 border border-purple-100 text-purple-700 rounded-lg text-sm font-bold">
+                    {p.name || p.codename || p.id || p}
+                 </span>
+               ))}
+             </div>
+          </div>
+        )}
       </div>
     </div>
   );

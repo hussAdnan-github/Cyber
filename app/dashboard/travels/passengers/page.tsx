@@ -152,7 +152,7 @@ export default async function PassengersPage(props: { searchParams: Promise<{ [k
                         </Link>
                       </Can>
                       <Can permission="delete_traveler">
-                        <DeleteButton endpoint="/office_travel/traveler/" id={traveler.id} />
+                        <DeleteButton endpoint="/office_travel/traveler/" id={traveler.id} permission="delete_traveler" />
                       </Can>
                     </div>
                   </td>
@@ -175,3 +175,4 @@ export default async function PassengersPage(props: { searchParams: Promise<{ [k
     </div>
   );
 }
+

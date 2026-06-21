@@ -76,7 +76,7 @@ export default async function DetailsPage({ params }: PageProps) {
            {Object.entries(data).filter(([k,v]) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean').map(([key, value]) => (
              <div key={key} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-100">
                 <div className="font-bold text-gray-800 break-all w-2/3">{String(value)}</div>
-                <div className="text-xs text-gray-500 w-1/3">{key}</div>
+                <div className="text-xs text-gray-500 w-1/3">{translateField(key)}</div>
              </div>
            ))}
         </div>

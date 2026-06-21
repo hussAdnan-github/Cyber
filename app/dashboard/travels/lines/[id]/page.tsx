@@ -72,7 +72,7 @@ export default function EditLinePage() {
         travel: Array.isArray(data.travel) ? data.travel.map(Number) : [Number(data.travel)].filter(Boolean),
       };
 
-      const response = await api.put(`/office_travel/line_travel/${id}/`, payload);
+      const response = await api.patch(`/office_travel/line_travel/${id}/`, payload);
       
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.push('/dashboard/travels/lines');

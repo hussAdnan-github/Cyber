@@ -164,7 +164,7 @@ export default async function GuestsPage(props: { searchParams: Promise<{ [key: 
                         </Link>
                         </Can>
                         <Can permission="delete_person">
-                        <DeleteButton endpoint="/hotal/person/" id={guest.id} />
+                        <DeleteButton endpoint="/hotal/person/" id={guest.id} permission="delete_person" />
                         </Can>
                       </div>
                     </td>

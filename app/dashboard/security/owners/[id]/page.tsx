@@ -85,7 +85,7 @@ export default function EditOwnerPage() {
         formData.append("documents", data.documents[0]);
       }
 
-      const response = await api.put(`/office_security/onwer/${id}/`, formData, {
+      const response = await api.patch(`/office_security/onwer/${id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

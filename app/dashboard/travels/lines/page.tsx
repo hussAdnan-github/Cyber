@@ -130,7 +130,7 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
                         </Link>
                       </Can>
                       <Can permission="delete_linetravel">
-                        <DeleteButton endpoint="/office_travel/line_travel/" id={line.id} />
+                        <DeleteButton endpoint="/office_travel/line_travel/" id={line.id} permission="delete_linetravel" />
                       </Can>
                     </div>
                   </td>
@@ -153,3 +153,4 @@ export default async function LinesPage(props: { searchParams: Promise<{ [key: s
     </div>
   );
 }
+

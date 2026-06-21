@@ -154,7 +154,7 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
                         </Link>
                       </Can>
                       <Can permission="delete_blacklist">
-                        <DeleteButton endpoint="/office_security/black_list/" id={item.id} />
+                        <DeleteButton endpoint="/office_security/black_list/" id={item.id} permission="delete_blacklist" />
                       </Can>
                     </div>
                   </td>
@@ -177,3 +177,4 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
     </div>
   );
 }
+

@@ -433,15 +433,7 @@ export default async function HotelsDashboardPage() {
 
         {/* Left Column - Alerts & Status */}
         <div className="w-full lg:w-80 flex flex-col gap-6 order-1 lg:order-2 shrink-0">
-          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-            <div className="bg-red-50 p-4 border-b border-red-100 flex justify-between items-center">
-               <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-               <h3 className="text-red-500 font-bold">تنبيهات أمنية</h3>
-            </div>
-            <div className="p-6 text-center text-sm text-gray-500 bg-gray-50/30">
-              لا توجد تنبيهات حالية.
-            </div>
-          </div>
+            
 
           <div className="bg-[#111827] rounded-lg border border-gray-800 overflow-hidden shadow-md text-white p-6 relative">
             <h3 className="font-bold text-lg mb-6 text-right">حالة النظام <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span></h3>

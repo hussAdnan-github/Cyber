@@ -71,7 +71,7 @@ export default function EditBlacklistPage() {
         payload.user_created = parseInt(data.user_created);
       }
 
-      const response = await api.put(`/office_security/blacklist/${id}/`, payload);
+      const response = await api.patch(`/office_security/blacklist/${id}/`, payload);
       
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.push('/dashboard/security/blacklist');

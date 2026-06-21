@@ -84,7 +84,7 @@ export default function EditDocumentPage() {
         formData.append("pic", data.pic[0]);
       }
 
-      const response = await api.put(`/office_security/documents/${id}/`, formData, {
+      const response = await api.patch(`/office_security/documents/${id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -4,16 +4,19 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface DeleteButtonProps {
   endpoint: string;
   id: number | string;
   onSuccess?: () => void;
+  permission?: string;
 }
 
-export default function DeleteButton({ endpoint, id, onSuccess }: DeleteButtonProps) {
+export default function DeleteButton({ endpoint, id, onSuccess, permission }: DeleteButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const { hasPermission, isLoading } = usePermissions();
 
   const handleDelete = async () => {
     if (!confirm("هل أنت متأكد من أنك تريد حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.")) {
@@ -39,6 +42,10 @@ export default function DeleteButton({ endpoint, id, onSuccess }: DeleteButtonPr
       setIsDeleting(false);
     }
   };
+
+  if (permission && (isLoading || !hasPermission(permission))) {
+    return null;
+  }
 
   return (
     <button 

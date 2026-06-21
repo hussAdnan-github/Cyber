@@ -133,7 +133,7 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
                                                 </Link>
                                             </Can>
                                             <Can permission="delete_place">
-                                                <DeleteButton endpoint="/office_security/places/" id={place.id} />
+                                                <DeleteButton endpoint="/office_security/places/" id={place.id} permission="delete_place" />
                                             </Can>
                                         </div>
                                     </td>
@@ -149,3 +149,4 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
         </div>
     );
 }
+

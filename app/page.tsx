@@ -44,12 +44,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0A192F]">
-      {/* Background decorations to mimic the network image */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#020d20] via-[#092248] to-[#04132a]"></div>
-      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
-      <div className="absolute w-[800px] h-[800px] bg-blue-500/20 rounded-full blur-[120px] -top-1/4 -right-1/4"></div>
-      <div className="absolute w-[600px] h-[600px] bg-[#00f2fe]/10 rounded-full blur-[100px] -bottom-1/4 -left-1/4"></div>
+    <div 
+      className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0A192F]"
+      style={{
+        backgroundImage: "url('/b_login.gif')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
+      }}
+    >
+      {/* Dark overlay to ensure form readability over the background image */}
+      <div className="absolute inset-0 bg-black/50"></div>
 
       <div className="glass-panel relative z-10 w-full max-w-[420px] p-10 rounded-2xl shadow-2xl mx-4 border border-white/10">
         <div className="text-center mb-8">

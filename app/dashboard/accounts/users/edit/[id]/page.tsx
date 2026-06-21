@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { AlertCircle, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function EditUserPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const router = useRouter();
+  const { isSuperuser } = usePermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
@@ -230,78 +232,80 @@ export default function EditUserPage(props: { params: Promise<{ id: string }> })
             </div>
           </div>
 
-          <div>
-            <h4 className="font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">الحالة والصلاحيات</h4>
-            
-            <div className="space-y-4 mb-6">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="is_active"
-                  checked={formData.is_active}
-                  onChange={handleChange}
-                  className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
-                />
-                <span className="text-sm font-bold text-gray-700">نشط (يحدد ما إذا كان المستخدم سيعامل على أنه نشط أزل تحديد هذا الحقل بدلاً من حذف الحسابات)</span>
-              </label>
+          {isSuperuser && (
+            <div>
+              <h4 className="font-bold text-gray-800 mb-4 border-b border-gray-50 pb-2">الحالة والصلاحيات</h4>
+              
+              <div className="space-y-4 mb-6">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    name="is_active"
+                    checked={formData.is_active}
+                    onChange={handleChange}
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
+                  />
+                  <span className="text-sm font-bold text-gray-700">نشط (يحدد ما إذا كان المستخدم سيعامل على أنه نشط أزل تحديد هذا الحقل بدلاً من حذف الحسابات)</span>
+                </label>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="is_staff"
-                  checked={formData.is_staff}
-                  onChange={handleChange}
-                  className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
-                />
-                <span className="text-sm font-bold text-gray-700">حالة النطاق (يحدد ما إذا كان يمكن للمستخدم الدخول إلى موقع الإدارة هذا)</span>
-              </label>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    name="is_staff"
+                    checked={formData.is_staff}
+                    onChange={handleChange}
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
+                  />
+                  <span className="text-sm font-bold text-gray-700">حالة النطاق (يحدد ما إذا كان يمكن للمستخدم الدخول إلى موقع الإدارة هذا)</span>
+                </label>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="is_superuser"
-                  checked={formData.is_superuser}
-                  onChange={handleChange}
-                  className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
-                />
-                <span className="text-sm font-bold text-gray-700">حالة المستخدم الخارق (يقضي بأن هذا المستخدم يمتلك كافة الصلاحيات دون الحاجة لمنحها له تصريحاً)</span>
-              </label>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Groups ids</label>
-                <select 
-                  multiple 
-                  name="groups_ids"
-                  value={formData.groups_ids.map(String)}
-                  onChange={(e) => handleMultiSelect(e, 'groups_ids')}
-                  className="w-full h-40 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id} className="py-1">{g.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">اضغط مع الاستمرار على مفتاح Control أو Command لتحديد أكثر من خيار.</p>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    name="is_superuser"
+                    checked={formData.is_superuser}
+                    onChange={handleChange}
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" 
+                  />
+                  <span className="text-sm font-bold text-gray-700">حالة المستخدم الخارق (يقضي بأن هذا المستخدم يمتلك كافة الصلاحيات دون الحاجة لمنحها له تصريحاً)</span>
+                </label>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">user_permissions ids</label>
-                <select 
-                  multiple 
-                  name="user_permissions_ids"
-                  value={formData.user_permissions_ids.map(String)}
-                  onChange={(e) => handleMultiSelect(e, 'user_permissions_ids')}
-                  className="w-full h-60 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary font-mono text-left"
-                  dir="ltr"
-                >
-                  {permissions.map(p => (
-                    <option key={p.id} value={p.id} className="py-1">{p.name}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Groups ids</label>
+                  <select 
+                    multiple 
+                    name="groups_ids"
+                    value={formData.groups_ids.map(String)}
+                    onChange={(e) => handleMultiSelect(e, 'groups_ids')}
+                    className="w-full h-40 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id} className="py-1">{g.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">اضغط مع الاستمرار على مفتاح Control أو Command لتحديد أكثر من خيار.</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">user_permissions ids</label>
+                  <select 
+                    multiple 
+                    name="user_permissions_ids"
+                    value={formData.user_permissions_ids.map(String)}
+                    onChange={(e) => handleMultiSelect(e, 'user_permissions_ids')}
+                    className="w-full h-60 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary font-mono text-left"
+                    dir="ltr"
+                  >
+                    {permissions.map(p => (
+                      <option key={p.id} value={p.id} className="py-1">{p.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex gap-3 pt-6 border-t border-gray-100 justify-end">
             <button 

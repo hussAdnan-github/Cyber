@@ -82,7 +82,7 @@ export default function EditCompanyPage() {
         user: data.user ? Number(data.user) : null,
       };
 
-      const response = await api.put(`/office_travel/travel/${id}/`, payload);
+      const response = await api.patch(`/office_travel/travel/${id}/`, payload);
       
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.push('/dashboard/travels/companies');

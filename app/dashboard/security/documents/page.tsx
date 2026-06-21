@@ -137,7 +137,7 @@ export default async function DocumentsPage() {
                         <Link href={`/dashboard/security/documents/${doc.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
                           <Edit className="w-4 h-4" />
                         </Link>
-                        <DeleteButton endpoint="/office_security/documents/" id={doc.id} />
+                        <DeleteButton endpoint="/office_security/documents/" id={doc.id} permission="delete_documents" />
                       </div>
                     </td>
                   </tr>
@@ -168,3 +168,4 @@ export default async function DocumentsPage() {
     </div>
   );
 }
+

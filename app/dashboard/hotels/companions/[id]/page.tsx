@@ -91,7 +91,7 @@ export default function EditCompanionPage() {
         formData.append("pic", data.pic[0]);
       }
 
-      const response = await api.put(`/hotal/companions/${id}/`, formData, {
+      const response = await api.patch(`/hotal/companions/${id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

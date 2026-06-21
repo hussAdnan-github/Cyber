@@ -49,7 +49,7 @@ export default function EditPlacePage() {
   const onSubmit = async (data: PlaceFormData) => {
     setSubmitError("");
     try {
-      const response = await api.put(`/office_security/places/${id}/`, data);
+      const response = await api.patch(`/office_security/places/${id}/`, data);
       
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.push('/dashboard/security/places');

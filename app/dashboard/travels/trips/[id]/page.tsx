@@ -84,7 +84,7 @@ export default function EditTripPage() {
         line_travel: data.line_travel ? Number(data.line_travel) : null,
       };
 
-      const response = await api.put(`/office_travel/trip/${id}/`, payload);
+      const response = await api.patch(`/office_travel/trip/${id}/`, payload);
       
       if (response.data?.success || response.status === 200 || response.status === 204) {
         router.push('/dashboard/travels/trips');

@@ -158,7 +158,7 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
                         </Link>
                         </Can>
                         <Can permission="delete_companions">
-                        <DeleteButton endpoint="/hotal/companions/" id={comp.id} />
+                        <DeleteButton endpoint="/hotal/companions/" id={comp.id} permission="delete_companions" />
                         </Can>
                       </div>
                     </td>
@@ -178,3 +178,4 @@ export default async function CompanionsPage(props: { searchParams: Promise<{ [k
     </div>
   );
 }
+

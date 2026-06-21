@@ -158,7 +158,7 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
                           </Link>
                         </Can>
                         <Can permission="delete_hotel">
-                          <DeleteButton endpoint="/hotal/hotel/" id={hotel.id} />
+                          <DeleteButton endpoint="/hotal/hotel/" id={hotel.id} permission="delete_hotel" />
                         </Can>
                       </div>
                     </td>
@@ -178,3 +178,4 @@ export default async function HotelsListPage(props: { searchParams: Promise<{ [k
     </div>
   );
 }
+

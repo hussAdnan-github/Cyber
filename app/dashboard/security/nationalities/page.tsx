@@ -107,7 +107,7 @@ export default async function NationalitiesPage({ searchParams }: { searchParams
                                                 </Link>
                                             </Can>
                                             <Can permission="delete_nationality">
-                                                <DeleteButton endpoint="/office_security/nationality/" id={nat.id} />
+                                                <DeleteButton endpoint="/office_security/nationality/" id={nat.id} permission="delete_nationality" />
                                             </Can>
                                         </div>
                                     </td>
@@ -123,3 +123,4 @@ export default async function NationalitiesPage({ searchParams }: { searchParams
         </div>
     );
 }
+
