@@ -37,17 +37,6 @@ export default function AddCompanionPage() {
 
         if (guestsRes.data?.success) setGuests(guestsRes.data.data.results || []);
         if (nationalitiesRes.data?.success) setNationalities(nationalitiesRes.data.data.results || []);
-
-        if (typeof window !== "undefined") {
-          const urlParams = new URLSearchParams(window.location.search);
-          const personId = urlParams.get("person_id");
-          if (personId) {
-            // setTimeout to ensure React has painted the options before setting the value
-            setTimeout(() => {
-              setValue("person", Number(personId));
-            }, 0);
-          }
-        }
       } catch (error) {
         console.error("Error fetching dropdowns:", error);
       }
@@ -55,6 +44,16 @@ export default function AddCompanionPage() {
 
     fetchDropdowns();
   }, [setValue]);
+
+  useEffect(() => {
+    if (guests.length > 0 && typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const personId = urlParams.get("person_id");
+      if (personId) {
+        setValue("person", Number(personId));
+      }
+    }
+  }, [guests, setValue]);
 
   const onSubmit = async (data: CompanionFormData) => {
     setSubmitError("");

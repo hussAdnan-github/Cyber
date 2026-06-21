@@ -3,10 +3,24 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import Link from "next/link";
+import { logout } from "@/app/actions/auth";
+import useSWR from 'swr';
+import { api } from '@/lib/api';
+import { Bell } from 'lucide-react';
+
+const fetcher = (url: string) => api.get(url).then(res => res.data?.data || res.data);
 
 export default function Topbar() {
   const pathname = usePathname();
   const [username, setUsername] = useState("المستخدم");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+   
+  const { data } = useSWR('/notification/', fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+  });
+  const notifCount = data?.count || 0;
    
   useEffect(() => {
     try {
@@ -59,9 +73,23 @@ export default function Topbar() {
     <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0 relative z-10 shadow-sm">
       <h1 className="text-xl font-bold text-gray-800">{pageTitle}</h1>
       
-      <div className="flex items-center">
+      <div className="flex items-center relative gap-6">
+        
+        {/* Notifications Icon */}
+        <Link href="/dashboard/notifications" className="relative p-2 text-gray-500 hover:text-gray-800 transition-colors rounded-full hover:bg-gray-100">
+          <Bell className="w-6 h-6" />
+          {notifCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 border border-white text-[10px] font-bold text-white">
+              {notifCount > 9 ? '+9' : notifCount}
+            </span>
+          )}
+        </Link>
+
         {/* User Profile */}
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
           <div className="flex flex-col text-left">
              <span className="text-sm font-bold text-gray-800">{username}</span>
           </div>
@@ -70,6 +98,30 @@ export default function Topbar() {
              <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></div>
           </div>
         </div>
+
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2">
+            <Link 
+              href="/dashboard/change-password" 
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-right font-medium transition-colors"
+              onClick={() => setIsDropdownOpen(false)}
+            >
+              تغيير كلمة المرور
+            </Link>
+            <button 
+              onClick={() => {
+                setIsDropdownOpen(false);
+                logout().then(() => {
+                  window.location.href = "/";
+                });
+              }}
+              className="w-full text-right block px-4 py-2 text-sm text-danger hover:bg-red-50 font-medium transition-colors"
+            >
+              تسجيل الخروج
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

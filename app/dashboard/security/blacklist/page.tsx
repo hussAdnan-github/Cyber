@@ -1,4 +1,4 @@
-import { Plus, Search, Eye, Edit, Trash2, Ban, UserX, AlertCircle, TriangleAlert } from "lucide-react";
+import { Plus, Search, Eye, Edit, Trash2, Ban, UserX, AlertCircle, TriangleAlert, FilePlus } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { ApiResponse } from "@/types/api";
@@ -151,6 +151,11 @@ export default async function BlacklistPage({ searchParams }: { searchParams: Pr
                       <Can permission="change_blacklist">
                         <Link href={`/dashboard/security/blacklist/${item.id}`} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-md border border-orange-100 transition-colors">
                           <Edit className="w-4 h-4" />
+                        </Link>
+                      </Can>
+                      <Can permission="add_documents">
+                        <Link href={`/dashboard/security/documents/add?blacklist_id=${item.id}`} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md border border-emerald-100 transition-colors" title="إضافة مستند">
+                          <FilePlus className="w-4 h-4" />
                         </Link>
                       </Can>
                       <Can permission="delete_blacklist">

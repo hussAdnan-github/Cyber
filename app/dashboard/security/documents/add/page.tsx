@@ -20,7 +20,7 @@ export default function AddDocumentPage() {
   const [blacklist, setBlacklist] = useState<any[]>([]);
   const [submitError, setSubmitError] = useState("");
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DocumentFormData>();
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<DocumentFormData>();
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -35,7 +35,17 @@ export default function AddDocumentPage() {
     };
     
     fetchDropdowns();
-  }, []);
+  }, [setValue]);
+
+  useEffect(() => {
+    if (blacklist.length > 0 && typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const blacklistId = urlParams.get("blacklist_id");
+      if (blacklistId) {
+        setValue("black_list", Number(blacklistId));
+      }
+    }
+  }, [blacklist, setValue]);
 
   const onSubmit = async (data: DocumentFormData) => {
     setSubmitError("");
