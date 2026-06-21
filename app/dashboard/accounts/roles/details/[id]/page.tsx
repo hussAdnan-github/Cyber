@@ -1,4 +1,5 @@
 import { AlertCircle, FileText } from "lucide-react";
+import { translateField } from "@/lib/translations";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import PermissionsMatrix from "@/components/accounts/PermissionsMatrix";
@@ -95,3 +96,4 @@ export default async function DetailsPage({ params }: PageProps) {
     </div>
   );
 }
+
